@@ -14,7 +14,7 @@ The origin marker is now a compact inline `Origin` metadata item. The prior left
 
 The 2026-06-29 MD3 visual refresh replaced the green palette with a sky-blue accent system, neutralized the page/card surfaces, switched sorting to Material Web outlined segmented buttons, replaced passive status pills with inline icon-and-label metadata, added stronger card hover/press affordance, and changed card close controls to Material Web `md-icon-button`.
 
-The main remaining UX caveat is close-button stability in the grid: each card has a stable close button placement, but after a card is removed, the compacting grid reflows, so the next close button is not guaranteed to remain under the pointer.
+The multi-row close-button stability issue has been addressed with temporary hidden reserve slots. Visible cards still slide into the empty slot after a close, but the grid keeps its total height while the cursor remains inside the card grid, so removing enough tabs to eliminate a row no longer pulls the page upward under the cursor. Reserve slots release after the pointer leaves the grid.
 
 ## Screenshots
 
@@ -27,8 +27,10 @@ The main remaining UX caveat is close-button stability in the grid: each card ha
 - [18-material-segmented-control-position.png](/Users/philipp/Documents/Tab Expose/qa-screenshots/18-material-segmented-control-position.png)
 - [19-material-segmented-control-domain.png](/Users/philipp/Documents/Tab Expose/qa-screenshots/19-material-segmented-control-domain.png)
 - [20-inline-md3-status-metadata.png](/Users/philipp/Documents/Tab Expose/qa-screenshots/20-inline-md3-status-metadata.png)
+- [21-close-reserve-multi-row-before.png](/Users/philipp/Documents/Tab Expose/qa-screenshots/21-close-reserve-multi-row-before.png)
+- [22-close-reserve-multi-row-after.png](/Users/philipp/Documents/Tab Expose/qa-screenshots/22-close-reserve-multi-row-after.png)
 
-Earlier exploratory screenshots are still in `qa-screenshots/`, but screenshot 20 reflects the current sky-blue MD3 revision with inline status metadata.
+Earlier exploratory screenshots are still in `qa-screenshots/`, but screenshots 21 and 22 reflect the current sky-blue MD3 revision with the multi-row close reserve behavior.
 
 ## Results By MVP Story
 
@@ -48,7 +50,7 @@ Earlier exploratory screenshots are still in `qa-screenshots/`, but screenshot 2
 
 8. Click X to close tab: Pass. The IANA card close button closed only the disposable IANA tab.
 
-9. Stable card sizing and close placement: Partial. Card sizes and Material icon close buttons are stable within each card. The compacting grid still reflows after close.
+9. Stable card sizing and close placement: Pass. Card sizes and Material icon close buttons are stable within each card. A 60-tab, five-column grid was tested by closing five cards from the same close-button coordinate; the count changed to 55 and the multi-row grid did not jump during the close burst.
 
 10. Toggle By Position / By Domain: Pass. Both sort modes worked through the Material Web outlined segmented button control.
 

@@ -121,9 +121,11 @@ h1 {
   max-width: 1440px;
   margin: 0 auto;
   align-items: stretch;
+  overflow-anchor: none;
 }
 
-.tab-card {
+.tab-card,
+.tab-card-reserve {
   position: relative;
   display: grid;
   grid-template-rows: 1fr auto;
@@ -131,6 +133,9 @@ h1 {
   padding: 16px;
   border: 1px solid var(--md-sys-color-outline-variant);
   border-radius: 8px;
+}
+
+.tab-card {
   background: var(--md-sys-color-surface-container-low);
   color: var(--md-sys-color-on-surface);
   overflow: hidden;
@@ -142,6 +147,11 @@ h1 {
     border-color 140ms ease,
     box-shadow 140ms ease,
     transform 140ms ease;
+}
+
+.tab-card-reserve {
+  visibility: hidden;
+  pointer-events: none;
 }
 
 .tab-card md-ripple {

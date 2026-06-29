@@ -12,11 +12,15 @@ import { closeIconSvg, statusIconSvg } from './icons';
 import { sortTabs, toManagedTab } from './tab-model';
 
 const SORT_STORAGE_KEY = 'sortMode';
+const CLOSE_RESERVE_TIMEOUT_MS = 1800;
 
 let state: EagleState;
 let managedTabs: ManagedTab[] = [];
 let orderedTabs: ManagedTab[] = [];
 let refreshTimer: number | undefined;
+let closeReserveSlots = 0;
+let closeReserveTimer: number | undefined;
+let isPointerInsideGrid = false;
 
 const grid = requiredElement<HTMLDivElement>('#tab-grid');
 const tabCount = requiredElement<HTMLParagraphElement>('#tab-count');
@@ -75,6 +79,15 @@ function bindEvents(): void {
 
   returnOriginButton.addEventListener('click', () => {
     void returnToOrigin();
+  });
+
+  grid.addEventListener('pointerenter', () => {
+    isPointerInsideGrid = true;
+  });
+
+  grid.addEventListener('pointerleave', () => {
+    isPointerInsideGrid = false;
+    clearGridReserveSlots();
   });
 
   document.addEventListener('keydown', (event) => {
@@ -208,7 +221,7 @@ function render(): void {
   tabCount.textContent = `${orderedTabs.length} ${orderedTabs.length === 1 ? 'tab' : 'tabs'}`;
   returnOriginButton.toggleAttribute('disabled', !state.originTabId);
 
-  if (orderedTabs.length === 0) {
+  if (orderedTabs.length === 0 && closeReserveSlots === 0) {
     const empty = document.createElement('div');
     empty.className = 'empty-state';
     empty.innerHTML = `
@@ -225,6 +238,10 @@ function render(): void {
 
   for (const tab of orderedTabs) {
     grid.append(createTabCard(tab));
+  }
+
+  for (let index = 0; index < closeReserveSlots; index += 1) {
+    grid.append(createGridReserveSlot());
   }
 }
 
@@ -272,10 +289,18 @@ function createTabCard(tab: ManagedTab): HTMLElement {
 
   card.querySelector<HTMLElement>('.close-button')?.addEventListener('click', (event) => {
     event.stopPropagation();
+    isPointerInsideGrid = true;
     void closeManagedTab(tab.id);
   });
 
   return card;
+}
+
+function createGridReserveSlot(): HTMLElement {
+  const reserve = document.createElement('div');
+  reserve.className = 'tab-card-reserve';
+  reserve.setAttribute('aria-hidden', 'true');
+  return reserve;
 }
 
 function metadataItem(icon: Parameters<typeof statusIconSvg>[0], label: string): string {
@@ -301,6 +326,7 @@ function moveSelection(delta: number): void {
 async function closeManagedTab(tabId: number): Promise<void> {
   if (state.pendingTabIds.has(tabId)) return;
 
+  reserveGridSlot();
   state.pendingTabIds.add(tabId);
 
   managedTabs = managedTabs.filter((tab) => tab.id !== tabId);
@@ -315,10 +341,48 @@ async function closeManagedTab(tabId: number): Promise<void> {
   try {
     await chrome.tabs.remove(tabId);
   } catch {
+    releaseGridSlot();
     setStatus('That tab was already gone. Refreshing Tab Eagle.');
   } finally {
     state.pendingTabIds.delete(tabId);
     await refreshTabs();
+  }
+}
+
+function reserveGridSlot(): void {
+  closeReserveSlots += 1;
+  scheduleReserveRelease();
+}
+
+function releaseGridSlot(): void {
+  closeReserveSlots = Math.max(0, closeReserveSlots - 1);
+  scheduleReserveRelease();
+}
+
+function scheduleReserveRelease(): void {
+  window.clearTimeout(closeReserveTimer);
+
+  if (closeReserveSlots === 0) {
+    render();
+    return;
+  }
+
+  closeReserveTimer = window.setTimeout(() => {
+    if (isPointerInsideGrid) {
+      scheduleReserveRelease();
+      return;
+    }
+
+    clearGridReserveSlots();
+  }, CLOSE_RESERVE_TIMEOUT_MS);
+}
+
+function clearGridReserveSlots(): void {
+  window.clearTimeout(closeReserveTimer);
+
+  if (closeReserveSlots > 0) {
+    closeReserveSlots = 0;
+    render();
   }
 }
 
