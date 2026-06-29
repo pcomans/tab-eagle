@@ -54,7 +54,7 @@ async function init(): Promise<void> {
     [SORT_STORAGE_KEY]: 'position'
   });
 
-  const initialSortMode = storedSortMode === 'domain' ? 'domain' : 'position';
+  const initialSortMode = isSortMode(storedSortMode) ? storedSortMode : 'position';
 
   state = {
     sourceWindowId,
@@ -72,7 +72,8 @@ async function init(): Promise<void> {
 function bindEvents(): void {
   sortButtons.forEach((button) => {
     button.addEventListener('click', () => {
-      const sortMode = button.dataset.sort === 'domain' ? 'domain' : 'position';
+      const sortMode = button.dataset.sort;
+      if (!isSortMode(sortMode)) return;
       void setSortMode(sortMode);
     });
   });
@@ -216,6 +217,10 @@ function syncSortControl(): void {
   });
 }
 
+function isSortMode(value: unknown): value is SortMode {
+  return value === 'position' || value === 'domain' || value === 'recent' || value === 'leastRecent';
+}
+
 function render(): void {
   grid.replaceChildren();
   tabCount.textContent = `${orderedTabs.length} ${orderedTabs.length === 1 ? 'tab' : 'tabs'}`;
@@ -278,6 +283,7 @@ function createTabCard(tab: ManagedTab): HTMLElement {
       <div class="tab-copy">
         <div class="domain">${escapeHtml(tab.domain)}</div>
         <h2>${escapeHtml(tab.title)}</h2>
+        <div class="last-accessed">${escapeHtml(formatLastAccessed(tab.lastAccessed))}</div>
       </div>
     </div>
     <div class="tab-meta" aria-label="Tab status">${metadata}</div>
@@ -310,6 +316,41 @@ function metadataItem(icon: Parameters<typeof statusIconSvg>[0], label: string):
       <span>${label}</span>
     </span>
   `;
+}
+
+function formatLastAccessed(lastAccessed: number | undefined, now = Date.now()): string {
+  if (typeof lastAccessed !== 'number') {
+    return 'Last used unknown';
+  }
+
+  const elapsedSeconds = Math.max(0, Math.floor((now - lastAccessed) / 1000));
+
+  if (elapsedSeconds < 60) {
+    return 'Last used just now';
+  }
+
+  const elapsedMinutes = Math.floor(elapsedSeconds / 60);
+  if (elapsedMinutes < 60) {
+    return `Last used ${elapsedMinutes}m ago`;
+  }
+
+  const elapsedHours = Math.floor(elapsedMinutes / 60);
+  if (elapsedHours < 24) {
+    return `Last used ${elapsedHours}h ago`;
+  }
+
+  const elapsedDays = Math.floor(elapsedHours / 24);
+  if (elapsedDays < 30) {
+    return `Last used ${elapsedDays}d ago`;
+  }
+
+  if (elapsedDays < 365) {
+    const elapsedMonths = Math.floor(elapsedDays / 30);
+    return `Last used ${elapsedMonths}mo ago`;
+  }
+
+  const elapsedYears = Math.floor(elapsedDays / 365);
+  return `Last used ${elapsedYears}y ago`;
 }
 
 function moveSelection(delta: number): void {

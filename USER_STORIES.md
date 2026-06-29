@@ -38,13 +38,13 @@
 
 18. As a user, when a tab is closed from Tab Eagle, I want the closed tab to disappear immediately so the view stays accurate.
 
+19. As a user, I want tab cards to show when a tab was last accessed in human-readable age format so I can find tabs I have not used recently.
+
+20. As a user, I want to sort tabs by recently used or least recently used so I can manage tabs by attention instead of only by position or domain.
+
 ## Post-MVP
 
-19. As a user, I want tab cards to show useful tab state such as pinned, audible, muted, loading, discarded, or frozen so I can understand which tabs need attention.
-
-20. As a user, I want tab cards to show when a tab was last accessed so I can find stale tabs that I may no longer need.
-
-21. As a user, I want to sort tabs by recently used, least recently used, or stale first so I can manage tabs by attention instead of only by position or domain.
+21. As a user, I want tab cards to show useful tab state such as pinned, audible, muted, loading, discarded, or frozen so I can understand which tabs need attention.
 
 22. As a user, I want to filter tabs by state such as audible, pinned, muted, unloaded, or grouped so I can quickly find tabs with a specific behavior.
 

@@ -25,6 +25,17 @@ export function normalizeDomain(rawUrl: string | undefined): string {
   }
 }
 
+export function toRenderableFaviconUrl(rawUrl: string | undefined): string | undefined {
+  if (!rawUrl) return undefined;
+
+  try {
+    const url = new URL(rawUrl);
+    return ['http:', 'https:', 'data:', 'chrome-extension:'].includes(url.protocol) ? rawUrl : undefined;
+  } catch {
+    return undefined;
+  }
+}
+
 export function toManagedTab(tab: chrome.tabs.Tab): ManagedTab | null {
   if (typeof tab.id !== 'number' || typeof tab.windowId !== 'number') {
     return null;
@@ -40,7 +51,7 @@ export function toManagedTab(tab: chrome.tabs.Tab): ManagedTab | null {
     pendingUrl: tab.pendingUrl,
     domain: normalizeDomain(url),
     title: tab.title?.trim() || url || 'Untitled tab',
-    favIconUrl: tab.favIconUrl,
+    favIconUrl: toRenderableFaviconUrl(tab.favIconUrl),
     pinned: Boolean(tab.pinned),
     audible: Boolean(tab.audible),
     muted: Boolean(tab.mutedInfo?.muted),
@@ -61,5 +72,26 @@ export function sortTabs(tabs: ManagedTab[], sortMode: SortMode): ManagedTab[] {
     });
   }
 
+  if (sortMode === 'recent') {
+    return copy.sort((left, right) => compareAccessTime(left, right, 'descending') || left.index - right.index);
+  }
+
+  if (sortMode === 'leastRecent') {
+    return copy.sort((left, right) => compareAccessTime(left, right, 'ascending') || left.index - right.index);
+  }
+
   return copy.sort((left, right) => left.index - right.index);
+}
+
+function compareAccessTime(left: ManagedTab, right: ManagedTab, direction: 'ascending' | 'descending'): number {
+  const leftAccessed = left.lastAccessed;
+  const rightAccessed = right.lastAccessed;
+
+  if (typeof leftAccessed === 'number' && typeof rightAccessed === 'number') {
+    return direction === 'ascending' ? leftAccessed - rightAccessed : rightAccessed - leftAccessed;
+  }
+
+  if (typeof leftAccessed === 'number') return -1;
+  if (typeof rightAccessed === 'number') return 1;
+  return 0;
 }

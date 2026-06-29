@@ -85,7 +85,7 @@ h1 {
 }
 
 .sort-control {
-  min-width: 232px;
+  min-width: 424px;
   --md-outlined-segmented-button-container-height: 40px;
   --md-outlined-segmented-button-outline-color: var(--md-sys-color-outline);
   --md-outlined-segmented-button-selected-container-color: var(--md-sys-color-secondary-container);
@@ -245,6 +245,14 @@ h1 {
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 3;
   overflow: hidden;
+}
+
+.last-accessed {
+  margin-top: 8px;
+  color: var(--md-sys-color-on-surface-variant);
+  font-size: 12px;
+  line-height: 16px;
+  font-weight: 500;
 }
 
 .tab-meta {

@@ -1,6 +1,6 @@
 # Tab Eagle
 
-Tab Eagle is a Chrome Manifest V3 extension that opens a full-tab view of the tabs in the current Chrome window. It lets you sort tabs by position or domain, click a card to activate a tab, and close tabs from the grid.
+Tab Eagle is a Chrome Manifest V3 extension that opens a full-tab view of the tabs in the current Chrome window. It lets you sort tabs by position, domain, recently used, or least recently used, click a card to activate a tab, and close tabs from the grid.
 
 ## Install For Development
 

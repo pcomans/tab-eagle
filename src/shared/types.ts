@@ -1,4 +1,4 @@
-export type SortMode = 'position' | 'domain';
+export type SortMode = 'position' | 'domain' | 'recent' | 'leastRecent';
 
 export interface ManagedTab {
   id: number;

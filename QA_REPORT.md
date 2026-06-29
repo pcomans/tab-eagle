@@ -16,6 +16,8 @@ The 2026-06-29 MD3 visual refresh replaced the green palette with a sky-blue acc
 
 The multi-row close-button stability issue has been addressed with temporary hidden reserve slots. Visible cards still slide into the empty slot after a close, but the grid keeps its total height while the cursor remains inside the card grid, so removing enough tabs to eliminate a row no longer pulls the page upward under the cursor. Reserve slots release after the pointer leaves the grid.
 
+The attention-sorting update adds human-readable last-used ages to cards and extends the sort control to Position, Domain, Recent, and Least Recent. Local `file://` favicon URLs are filtered out before rendering so local-resource console warnings fall back to the letter tile instead of attempting a blocked load.
+
 ## Screenshots
 
 - [12-direct-open-no-button-no-left-rail.png](/Users/philipp/Documents/Tab Expose/qa-screenshots/12-direct-open-no-button-no-left-rail.png)
@@ -52,7 +54,7 @@ Earlier exploratory screenshots are still in `qa-screenshots/`, but screenshots 
 
 9. Stable card sizing and close placement: Pass. Card sizes and Material icon close buttons are stable within each card. A 60-tab, five-column grid was tested by closing five cards from the same close-button coordinate; the count changed to 55 and the multi-row grid did not jump during the close burst.
 
-10. Toggle By Position / By Domain: Pass. Both sort modes worked through the Material Web outlined segmented button control.
+10. Toggle Position / Domain / Recent / Least Recent: Pass by automated coverage. The Material Web outlined segmented button control now exposes all four modes, persisted through the existing storage path.
 
 11. Domain sorting continuous without headings: Pass. Domain-sorted cards stayed in one continuous grid.
 
@@ -69,6 +71,12 @@ Earlier exploratory screenshots are still in `qa-screenshots/`, but screenshots 
 17. Closing a tab keeps Tab Eagle active: Pass. Closing the IANA tab from its card kept Tab Eagle active.
 
 18. Closed tab disappears immediately: Pass. Covered by story 14.
+
+19. Show human-readable last accessed age: Pass by automated coverage. Cards render Chrome's `lastAccessed` timestamp as compact age text such as `Last used just now`, `Last used 12m ago`, or `Last used 3d ago`; missing values show `Last used unknown`.
+
+20. Sort by recently used or least recently used: Pass by automated coverage. Unit tests cover both timestamp sort directions and keep tabs without `lastAccessed` after tabs with known access times.
+
+21. Avoid local favicon resource warnings: Pass by automated coverage. Unit tests verify `file://` favicon URLs are dropped before rendering, while web, data, and extension favicon URLs are preserved.
 
 ## Verification Commands
 
