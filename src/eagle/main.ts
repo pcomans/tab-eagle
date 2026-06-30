@@ -254,11 +254,16 @@ function syncSortControl(): void {
     button.toggleAttribute('selected', selected);
 
     if (button.dataset.sort === 'recent') {
-      (button as HTMLElement & { label: string }).label = state.sortMode === 'leastRecent' ? 'Recent ↑' : 'Recent ↓';
-      button.setAttribute(
-        'aria-label',
-        state.sortMode === 'leastRecent' ? 'Recent sort, oldest first' : 'Recent sort, newest first'
-      );
+      const label =
+        state.sortMode === 'leastRecent' ? 'Recent ↑' : state.sortMode === 'recent' ? 'Recent ↓' : 'Recent';
+      const ariaLabel =
+        state.sortMode === 'leastRecent'
+          ? 'Recent sort, oldest first'
+          : state.sortMode === 'recent'
+            ? 'Recent sort, newest first'
+            : 'Sort by recent activity';
+      (button as HTMLElement & { label: string }).label = label;
+      button.setAttribute('aria-label', ariaLabel);
     }
   });
 }
