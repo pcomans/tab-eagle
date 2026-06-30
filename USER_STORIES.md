@@ -64,18 +64,72 @@
 
 ## Upcoming
 
-1. As a user, I want tab cards to show useful tab state such as audible, muted, loading, discarded, frozen, or grouped so I can understand which tabs need attention.
+1. As a user, I want a collapsed tab group to appear as one regular-size grid card so closed groups fit naturally beside normal tab cards.
 
-2. As a user, I want to filter tabs by state such as audible, pinned, muted, unloaded, or grouped so I can quickly find tabs with a specific behavior.
+2. As a user, I want each collapsed group card to show the Chrome tab group title, color, and tab count so I can recognize it quickly.
 
-3. As a user, I want to see existing Chrome tab group information such as group title and color so Tab Eagle reflects organization I already made in Chrome.
+3. As a user, I want a collapsed group card to include a compact preview of its contents, such as favicon stack or representative titles, so it still feels like a folder.
 
-4. As a user, I want to perform common tab actions from each card, such as pin, mute, duplicate, discard, or close, so I can manage tabs without using the tab strip.
+4. As a user, I want ungrouped tabs to remain visible outside group cards and expanded group areas so every tab still has an obvious place in the overview.
 
-5. As a user, I want bulk actions for a domain, such as closing all tabs from that domain or keeping one and closing the rest, so I can clean up repeated tabs quickly.
+5. As a user, I want to open and close group folders in Tab Eagle so I can expand a group when I need detail and collapse it when I want a cleaner overview.
 
-6. As a user, I want the extension to suggest domain clusters without automatically rearranging my actual Chrome tabs so I can review organization before applying changes.
+6. As a user, I want opening a group to expand it inline in the current grid rather than in a modal or pop-up so the overview stays in one workspace.
 
-7. As a user, I want to see recently closed tabs and restore them from Tab Eagle so accidental closes are easy to undo.
+7. As a user, I want an expanded group to start on a new grid row and end before the next ungrouped tab or group so the group reads as one coherent folder-like block.
 
-8. As a user, I want richer tab information to be added without requesting access to all site data so the extension remains privacy-conscious as it grows.
+8. As a user, I want tabs inside an expanded group to remain regular tab cards so they keep the same click, close, Reading List, and metadata behavior as ungrouped tabs.
+
+9. As a user, I want expanded group tabs to sit on a subtle unifying background or boundary so I can see which cards belong to the group without changing card shape.
+
+10. As a user, I want an expanded group to have one clear collapse affordance in its group header so the group can be closed without adding repeated controls to every card.
+
+11. As a user, I want Tab Eagle to respect Chrome's collapsed or expanded group state when possible so the overview matches the browser's organization.
+
+12. As a user, I want to click a collapsed group card to open it in Tab Eagle without activating a content tab so inspecting a group does not interrupt my current tab.
+
+13. As a user, I want to click a tab card inside an expanded group to activate that tab while leaving Tab Eagle open so grouped tabs behave like regular tabs.
+
+14. As a user, I want to drag a tab card into a group card or expanded group area so I can add that tab to the existing Chrome tab group.
+
+15. As a user, I want to drag a tab card out of an expanded group into the ungrouped area so I can remove it from the Chrome tab group.
+
+16. As a user, I want to drag a tab card from one group into another group so I can move tabs between Chrome tab groups.
+
+17. As a user, I want a collapsed group card or expanded group area to show a clear drop target while I drag over it so I know where the tab will land before I release it.
+
+18. As a user, I want dropping onto a collapsed group card to be enough to add the tab to that group so I do not have to expand a group before using it as a drop target.
+
+19. As a user, I want a collapsed group card to auto-expand after a short drag hover so I can choose a more precise position inside the group when needed.
+
+20. As a user, I want Tab Eagle to update the actual Chrome tab group when I drag a tab in or out of a group so the browser tab strip and Tab Eagle stay in sync.
+
+21. As a user, I want dragging tabs between groups to preserve a predictable tab order so groups do not become disorganized after a drop.
+
+22. As a user, I want failed drag-and-drop group changes to revert visually and show a short error state so I am not left with a misleading view.
+
+23. As a keyboard user, I want an accessible non-drag way to move a tab into or out of a group so tab grouping is not mouse-only.
+
+24. As a user, I want search to auto-expand groups with matching tabs while search is active so collapsed groups do not hide useful results.
+
+25. As a user, I want groups that were auto-expanded for search to return to their previous open or closed state when search is cleared so search does not permanently rearrange my view.
+
+26. As a user, I want sorting by Position to preserve Chrome's tab group boundaries so grouped tabs do not get visually scattered.
+
+27. As a user, I want sorting by Domain or Recent to sort tabs inside each group while keeping group membership visible so sorting does not visually pull tabs out of their folder.
+
+28. As a user, I want empty groups to disappear when their last tab is removed so Tab Eagle stays aligned with Chrome's tab-backed group model.
+
+29. As a user, I want tab cards to show useful tab state such as audible, muted, loading, discarded, frozen, or grouped so I can understand which tabs need attention.
+
+30. As a user, I want to filter tabs by state such as audible, pinned, muted, unloaded, or grouped so I can quickly find tabs with a specific behavior.
+
+31. As a user, I want to perform common tab actions from each card, such as pin, mute, duplicate, discard, or close, so I can manage tabs without using the tab strip.
+
+32. As a user, I want bulk actions for a domain, such as closing all tabs from that domain or keeping one and closing the rest, so I can clean up repeated tabs quickly.
+
+33. As a user, I want the extension to suggest domain clusters without automatically rearranging my actual Chrome tabs so I can review organization before applying changes.
+
+34. As a user, I want to see recently closed tabs and restore them from Tab Eagle so accidental closes are easy to undo.
+
+35. As a user, I want richer tab information to be added without requesting access to all site data so the extension remains privacy-conscious as it grows.
