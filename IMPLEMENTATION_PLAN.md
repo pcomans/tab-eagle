@@ -14,6 +14,7 @@ The Tab Eagle tab itself must be filtered out of the managed tab list. It should
 - Chrome `tabs` API: use `chrome.tabs` from the service worker and extension page to query, activate, close, and observe tabs.
 - Chrome `tabs` permission: required for `url`, `pendingUrl`, `title`, and `favIconUrl`; this does not require host permissions such as `<all_urls>`.
 - Chrome `storage` API: use extension storage for lightweight preferences such as sort mode.
+- Chrome `readingList` API: use `chrome.readingList.addEntry()` to save normal web tabs to Chrome's built-in Reading List without host permissions.
 - Manifest V3 security: bundle all JavaScript with the extension package. Do not load remote code from a CDN.
 - Material Web: use `@material/web` where practical, bundled locally, with Material Design 3 tokens for color, typography, shape, and controls.
 
@@ -22,6 +23,7 @@ References:
 - https://developer.chrome.com/docs/extensions/reference/api/action
 - https://developer.chrome.com/docs/extensions/reference/api/tabs
 - https://developer.chrome.com/docs/extensions/reference/api/storage
+- https://developer.chrome.com/docs/extensions/reference/api/readingList
 - https://developer.chrome.com/docs/extensions/develop/migrate/what-is-mv3
 - https://m3.material.io/develop/web
 - https://material-web.dev/
@@ -42,7 +44,10 @@ Required MVP manifest keys:
 - `action.default_title: "Open Tab Eagle"`
 - `background.service_worker`
 - `background.type: "module"` if the bundled service worker uses ES modules
-- `permissions: ["tabs", "storage"]`
+- `permissions: ["tabs", "storage", "readingList"]`
+- `commands._execute_action.suggested_key.mac: "Command+Shift+E"`
+
+The `_execute_action` command is the correct shortcut path for opening Tab Eagle because it triggers the existing extension action. It does not dispatch `chrome.commands.onCommand`; keep the open behavior centralized in the action click handler.
 
 Avoid in MVP:
 

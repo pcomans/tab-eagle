@@ -6,6 +6,14 @@ export function closeIconSvg(): string {
   `;
 }
 
+export function readingListIconSvg(): string {
+  return `
+    <svg class="status-icon" slot="icon" viewBox="0 -960 960 960" aria-hidden="true" focusable="false">
+      <path d="M200-120v-640q0-33 23.5-56.5T280-840h280v80H280v518l200-86 200 86v-278h80v400L480-240 200-120Zm480-480v-120H560v-80h120v-120h80v120h120v80H760v120h-80Z"/>
+    </svg>
+  `;
+}
+
 export type StatusIconName = 'origin' | 'pinned' | 'audio' | 'muted';
 
 const STATUS_ICON_PATHS: Record<StatusIconName, string> = {

@@ -40,22 +40,28 @@
 
 19. As a user, I want tab cards to show when a tab was last accessed in human-readable age format so I can find tabs I have not used recently.
 
-20. As a user, I want to sort tabs by recently used or least recently used so I can manage tabs by attention instead of only by position or domain.
+20. As a user, I want to click Recent once for recently used tabs and click it again for least recently used tabs so I can manage tabs by attention without adding another sort segment.
+
+21. As a user, I want age-sorted cards to show a subtle blue tint when used in the last 5 minutes, stay neutral until 1 hour, and become progressively warmer after 1 hour, 6 hours, 1 day, 3 days, and 1 week so neglected tabs stand out without adding extra labels.
+
+22. As a user, I want to add any normal web tab to Chrome's Reading List from its tab card so I can save it for later before closing or switching away.
+
+23. As a macOS user, I want to press Command+Shift+E to open Tab Eagle so it feels like the eagle equivalent of Chrome's tab search shortcut.
 
 ## Post-MVP
 
-21. As a user, I want tab cards to show useful tab state such as pinned, audible, muted, loading, discarded, or frozen so I can understand which tabs need attention.
+24. As a user, I want tab cards to show useful tab state such as pinned, audible, muted, loading, discarded, or frozen so I can understand which tabs need attention.
 
-22. As a user, I want to filter tabs by state such as audible, pinned, muted, unloaded, or grouped so I can quickly find tabs with a specific behavior.
+25. As a user, I want to filter tabs by state such as audible, pinned, muted, unloaded, or grouped so I can quickly find tabs with a specific behavior.
 
-23. As a user, I want to see existing Chrome tab group information such as group title and color so Tab Eagle reflects organization I already made in Chrome.
+26. As a user, I want to see existing Chrome tab group information such as group title and color so Tab Eagle reflects organization I already made in Chrome.
 
-24. As a user, I want to perform common tab actions from each card, such as pin, mute, duplicate, discard, or close, so I can manage tabs without using the tab strip.
+27. As a user, I want to perform common tab actions from each card, such as pin, mute, duplicate, discard, or close, so I can manage tabs without using the tab strip.
 
-25. As a user, I want bulk actions for a domain, such as closing all tabs from that domain or keeping one and closing the rest, so I can clean up repeated tabs quickly.
+28. As a user, I want bulk actions for a domain, such as closing all tabs from that domain or keeping one and closing the rest, so I can clean up repeated tabs quickly.
 
-26. As a user, I want the extension to suggest domain clusters without automatically rearranging my actual Chrome tabs so I can review organization before applying changes.
+29. As a user, I want the extension to suggest domain clusters without automatically rearranging my actual Chrome tabs so I can review organization before applying changes.
 
-27. As a user, I want to see recently closed tabs and restore them from Tab Eagle so accidental closes are easy to undo.
+30. As a user, I want to see recently closed tabs and restore them from Tab Eagle so accidental closes are easy to undo.
 
-28. As a user, I want richer tab information to be added without requesting access to all site data so the extension remains privacy-conscious as it grows.
+31. As a user, I want richer tab information to be added without requesting access to all site data so the extension remains privacy-conscious as it grows.

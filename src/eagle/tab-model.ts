@@ -36,6 +36,18 @@ export function toRenderableFaviconUrl(rawUrl: string | undefined): string | und
   }
 }
 
+export function toReadingListUrl(tab: Pick<ManagedTab, 'url' | 'pendingUrl'>): string | undefined {
+  const rawUrl = tab.url ?? tab.pendingUrl;
+  if (!rawUrl) return undefined;
+
+  try {
+    const url = new URL(rawUrl);
+    return url.protocol === 'http:' || url.protocol === 'https:' ? url.href : undefined;
+  } catch {
+    return undefined;
+  }
+}
+
 export function toManagedTab(tab: chrome.tabs.Tab): ManagedTab | null {
   if (typeof tab.id !== 'number' || typeof tab.windowId !== 'number') {
     return null;
@@ -81,6 +93,14 @@ export function sortTabs(tabs: ManagedTab[], sortMode: SortMode): ManagedTab[] {
   }
 
   return copy.sort((left, right) => left.index - right.index);
+}
+
+export function nextSortMode(currentSortMode: SortMode, requestedSortMode: SortMode): SortMode {
+  if (requestedSortMode === 'recent' && (currentSortMode === 'recent' || currentSortMode === 'leastRecent')) {
+    return currentSortMode === 'recent' ? 'leastRecent' : 'recent';
+  }
+
+  return requestedSortMode;
 }
 
 function compareAccessTime(left: ManagedTab, right: ManagedTab, direction: 'ascending' | 'descending'): number {

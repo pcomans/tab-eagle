@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { ManagedTab } from '../shared/types';
-import { normalizeDomain, sortTabs, toRenderableFaviconUrl } from './tab-model';
+import { nextSortMode, normalizeDomain, sortTabs, toReadingListUrl, toRenderableFaviconUrl } from './tab-model';
 
 function tab(id: number, index: number, domain: string, lastAccessed?: number): ManagedTab {
   return {
@@ -42,6 +42,23 @@ describe('toRenderableFaviconUrl', () => {
   });
 });
 
+describe('toReadingListUrl', () => {
+  it('keeps normal web page URLs', () => {
+    expect(toReadingListUrl({ url: 'https://example.com/path?x=1#section' })).toBe(
+      'https://example.com/path?x=1#section'
+    );
+  });
+
+  it('uses pendingUrl when url is not available', () => {
+    expect(toReadingListUrl({ pendingUrl: 'https://example.com/loading' })).toBe('https://example.com/loading');
+  });
+
+  it('drops non-web URLs', () => {
+    expect(toReadingListUrl({ url: 'chrome://extensions' })).toBeUndefined();
+    expect(toReadingListUrl({ url: 'file:///Users/philipp/project/index.html' })).toBeUndefined();
+  });
+});
+
 describe('sortTabs', () => {
   it('sorts by tab index for position mode', () => {
     expect(sortTabs([tab(1, 2, 'b.com'), tab(2, 0, 'a.com')], 'position').map((item) => item.id)).toEqual([2, 1]);
@@ -70,5 +87,18 @@ describe('sortTabs', () => {
         'leastRecent'
       ).map((item) => item.id)
     ).toEqual([1, 3, 2]);
+  });
+});
+
+describe('nextSortMode', () => {
+  it('toggles the recent control between newest and oldest first when clicked repeatedly', () => {
+    expect(nextSortMode('position', 'recent')).toBe('recent');
+    expect(nextSortMode('recent', 'recent')).toBe('leastRecent');
+    expect(nextSortMode('leastRecent', 'recent')).toBe('recent');
+  });
+
+  it('does not toggle position or domain when clicked repeatedly', () => {
+    expect(nextSortMode('position', 'position')).toBe('position');
+    expect(nextSortMode('domain', 'domain')).toBe('domain');
   });
 });

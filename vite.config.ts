@@ -27,6 +27,16 @@ export default defineConfig({
   },
   test: {
     environment: 'node',
-    include: ['src/**/*.test.ts']
+    include: ['src/**/*.test.ts'],
+    deps: {
+      optimizer: {
+        ssr: {
+          // The Material color package is browser-bundler friendly, but its latest ESM bundle
+          // includes a few extensionless internal imports that Node's test loader rejects.
+          enabled: true,
+          include: ['@material/material-color-utilities']
+        }
+      }
+    }
   }
 });

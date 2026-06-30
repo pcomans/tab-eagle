@@ -1,5 +1,6 @@
 import '@material/web/button/filled-button.js';
 import '@material/web/button/outlined-button.js';
+import '@material/web/button/text-button.js';
 import '@material/web/iconbutton/icon-button.js';
 import '@material/web/labs/segmentedbutton/outlined-segmented-button.js';
 import '@material/web/labs/segmentedbuttonset/outlined-segmented-button-set.js';
@@ -8,8 +9,10 @@ import './styles.css';
 
 import type { EagleState, ManagedTab, SortMode } from '../shared/types';
 import { getEagleBaseUrl, isEagleUrl } from '../shared/urls';
-import { closeIconSvg, statusIconSvg } from './icons';
-import { sortTabs, toManagedTab } from './tab-model';
+import { ageBucketForLastAccessed, colorsForAgeBucket, isAgeSortMode } from './age-colors';
+import { colorsFromImage, faviconUrlForPageUrl, loadImage, type DomainCardColors } from './domain-colors';
+import { closeIconSvg, readingListIconSvg, statusIconSvg } from './icons';
+import { nextSortMode, sortTabs, toManagedTab, toReadingListUrl } from './tab-model';
 
 const SORT_STORAGE_KEY = 'sortMode';
 const CLOSE_RESERVE_TIMEOUT_MS = 1800;
@@ -21,6 +24,10 @@ let refreshTimer: number | undefined;
 let closeReserveSlots = 0;
 let closeReserveTimer: number | undefined;
 let isPointerInsideGrid = false;
+let readingListUrls = new Set<string>();
+let readingListPendingTabIds = new Set<number>();
+const domainColorCache = new Map<string, DomainCardColors | null>();
+const domainColorRequests = new Set<string>();
 
 const grid = requiredElement<HTMLDivElement>('#tab-grid');
 const tabCount = requiredElement<HTMLParagraphElement>('#tab-count');
@@ -66,6 +73,7 @@ async function init(): Promise<void> {
 
   bindEvents();
   syncSortControl();
+  await refreshReadingList();
   await refreshTabs();
 }
 
@@ -74,7 +82,7 @@ function bindEvents(): void {
     button.addEventListener('click', () => {
       const sortMode = button.dataset.sort;
       if (!isSortMode(sortMode)) return;
-      void setSortMode(sortMode);
+      void setSortMode(nextSortMode(state.sortMode, sortMode));
     });
   });
 
@@ -173,6 +181,23 @@ function bindEvents(): void {
       })
       .catch(() => undefined);
   });
+
+  if (chrome.readingList) {
+    chrome.readingList.onEntryAdded.addListener((entry) => {
+      readingListUrls.add(entry.url);
+      render();
+    });
+
+    chrome.readingList.onEntryRemoved.addListener((entry) => {
+      readingListUrls.delete(entry.url);
+      render();
+    });
+
+    chrome.readingList.onEntryUpdated.addListener((entry) => {
+      readingListUrls.add(entry.url);
+      render();
+    });
+  }
 }
 
 function scheduleRefresh(): void {
@@ -180,6 +205,17 @@ function scheduleRefresh(): void {
   refreshTimer = window.setTimeout(() => {
     void refreshTabs();
   }, 80);
+}
+
+async function refreshReadingList(): Promise<void> {
+  if (!chrome.readingList) return;
+
+  try {
+    const entries = await chrome.readingList.query({});
+    readingListUrls = new Set(entries.map((entry) => entry.url));
+  } catch {
+    setStatus('Tab Eagle could not read the Chrome Reading List.');
+  }
 }
 
 async function refreshTabs(): Promise<void> {
@@ -211,9 +247,19 @@ async function setSortMode(sortMode: SortMode): Promise<void> {
 
 function syncSortControl(): void {
   sortButtons.forEach((button) => {
-    const selected = button.dataset.sort === state.sortMode;
+    const selected =
+      button.dataset.sort === state.sortMode ||
+      (button.dataset.sort === 'recent' && state.sortMode === 'leastRecent');
     (button as HTMLElement & { selected: boolean }).selected = selected;
     button.toggleAttribute('selected', selected);
+
+    if (button.dataset.sort === 'recent') {
+      (button as HTMLElement & { label: string }).label = state.sortMode === 'leastRecent' ? 'Recent ↑' : 'Recent ↓';
+      button.setAttribute(
+        'aria-label',
+        state.sortMode === 'leastRecent' ? 'Recent sort, oldest first' : 'Recent sort, newest first'
+      );
+    }
   });
 }
 
@@ -242,6 +288,10 @@ function render(): void {
   }
 
   for (const tab of orderedTabs) {
+    if (state.sortMode === 'domain') {
+      void ensureDomainColor(tab);
+    }
+
     grid.append(createTabCard(tab));
   }
 
@@ -254,6 +304,14 @@ function createTabCard(tab: ManagedTab): HTMLElement {
   const card = document.createElement('article');
   const origin = tab.id === state.originTabId;
   const pending = state.pendingTabIds.has(tab.id);
+  const readingListUrl = toReadingListUrl(tab);
+  const readingListPending = readingListPendingTabIds.has(tab.id);
+  const isInReadingList = Boolean(readingListUrl && readingListUrls.has(readingListUrl));
+  const showReadingListButton = !tab.pinned;
+  const canAddToReadingList = Boolean(
+    showReadingListButton && chrome.readingList && readingListUrl && !isInReadingList && !readingListPending
+  );
+  const readingListLabel = isInReadingList ? 'In Reading List' : readingListPending ? 'Adding...' : 'Read later';
 
   card.className = 'tab-card';
   card.role = 'gridcell';
@@ -261,10 +319,10 @@ function createTabCard(tab: ManagedTab): HTMLElement {
   card.dataset.tabId = String(tab.id);
   card.classList.toggle('is-origin', origin);
   card.classList.toggle('is-pending', pending);
+  applyDomainCardColors(card, tab);
+  applyAgeCardColors(card, tab);
 
-  const favicon = tab.favIconUrl
-    ? `<img class="favicon" src="${escapeAttribute(tab.favIconUrl)}" alt="" loading="lazy" />`
-    : `<div class="favicon fallback" aria-hidden="true">${escapeHtml(tab.domain[0]?.toUpperCase() ?? '?')}</div>`;
+  const favicon = faviconMarkup(tab);
 
   const metadata = [
     origin ? metadataItem('origin', 'Origin') : '',
@@ -286,7 +344,10 @@ function createTabCard(tab: ManagedTab): HTMLElement {
         <div class="last-accessed">${escapeHtml(formatLastAccessed(tab.lastAccessed))}</div>
       </div>
     </div>
-    <div class="tab-meta" aria-label="Tab status">${metadata}</div>
+    <div class="card-footer">
+      <div class="tab-meta" aria-label="Tab status">${metadata}</div>
+      ${showReadingListButton ? readingListButton(tab, readingListLabel, canAddToReadingList) : ''}
+    </div>
   `;
 
   card.addEventListener('click', () => {
@@ -299,7 +360,118 @@ function createTabCard(tab: ManagedTab): HTMLElement {
     void closeManagedTab(tab.id);
   });
 
+  card.querySelector<HTMLElement>('.reading-list-button')?.addEventListener('click', (event) => {
+    event.stopPropagation();
+    void addTabToReadingList(tab.id);
+  });
+
+  bindFaviconFallback(card);
+
   return card;
+}
+
+function applyDomainCardColors(card: HTMLElement, tab: ManagedTab): void {
+  if (state.sortMode !== 'domain') return;
+
+  const colors = domainColorCache.get(tab.domain);
+  if (!colors) return;
+
+  card.classList.add('is-domain-colored');
+  card.style.setProperty('--domain-card-container', colors.container);
+  card.style.setProperty('--domain-card-on-container', colors.onContainer);
+  card.style.setProperty('--domain-card-outline', colors.outline);
+  card.style.setProperty('--domain-card-primary', colors.primary);
+}
+
+function applyAgeCardColors(card: HTMLElement, tab: ManagedTab): void {
+  if (!isAgeSortMode(state.sortMode)) return;
+
+  const bucket = ageBucketForLastAccessed(tab.lastAccessed);
+  if (!bucket) return;
+
+  const colors = colorsForAgeBucket(bucket);
+  card.classList.add('is-age-colored');
+  card.style.setProperty('--age-card-container', colors.container);
+  card.style.setProperty('--age-card-on-container', colors.onContainer);
+  card.style.setProperty('--age-card-outline', colors.outline);
+  card.style.setProperty('--age-card-primary', colors.primary);
+}
+
+async function ensureDomainColor(tab: ManagedTab): Promise<void> {
+  if (domainColorCache.has(tab.domain) || domainColorRequests.has(tab.domain)) return;
+
+  const pageUrl = toReadingListUrl(tab);
+  if (!pageUrl) {
+    domainColorCache.set(tab.domain, null);
+    return;
+  }
+
+  domainColorRequests.add(tab.domain);
+
+  try {
+    const image = await loadImage(faviconUrlForPageUrl(pageUrl));
+    domainColorCache.set(tab.domain, await colorsFromImage(image));
+  } catch {
+    domainColorCache.set(tab.domain, null);
+  } finally {
+    domainColorRequests.delete(tab.domain);
+  }
+
+  if (state.sortMode === 'domain' && orderedTabs.some((item) => item.domain === tab.domain)) {
+    render();
+  }
+}
+
+function faviconMarkup(tab: ManagedTab): string {
+  const fallback = `
+    <div class="favicon fallback${tab.favIconUrl ? ' is-hidden' : ''}" aria-hidden="true">
+      ${escapeHtml(tab.domain[0]?.toUpperCase() ?? '?')}
+    </div>
+  `;
+
+  return `
+    <div class="favicon-frame">
+      ${
+        tab.favIconUrl
+          ? `<img class="favicon favicon-image" src="${escapeAttribute(tab.favIconUrl)}" alt="" loading="lazy" />`
+          : ''
+      }
+      ${fallback}
+    </div>
+  `;
+}
+
+function bindFaviconFallback(card: HTMLElement): void {
+  const image = card.querySelector<HTMLImageElement>('.favicon-image');
+  const fallback = card.querySelector<HTMLElement>('.favicon.fallback');
+  if (!image || !fallback) return;
+
+  const showFallback = () => {
+    image.remove();
+    fallback.classList.remove('is-hidden');
+  };
+
+  image.addEventListener('error', showFallback, { once: true });
+
+  if (image.complete && image.naturalWidth === 0) {
+    showFallback();
+  }
+}
+
+function readingListButton(tab: ManagedTab, label: string, enabled: boolean): string {
+  const ariaLabel = label === 'Read later' ? `Add to Reading List: ${tab.title}` : `${label}: ${tab.title}`;
+
+  return `
+    <md-text-button
+      class="reading-list-button"
+      type="button"
+      aria-label="${escapeAttribute(ariaLabel)}"
+      ${enabled ? '' : 'disabled'}
+    >
+      ${readingListIconSvg()}
+      ${escapeHtml(label)}
+    </md-text-button>
+  `;
 }
 
 function createGridReserveSlot(): HTMLElement {
@@ -362,6 +534,49 @@ function moveSelection(delta: number): void {
   const nextTabId = orderedTabs[nextIndex]?.id;
   const nextCard = grid.querySelector<HTMLElement>(`.tab-card[data-tab-id="${nextTabId}"]`);
   nextCard?.focus();
+}
+
+async function addTabToReadingList(tabId: number): Promise<void> {
+  if (readingListPendingTabIds.has(tabId)) return;
+
+  const tab = managedTabs.find((item) => item.id === tabId);
+  const url = tab ? toReadingListUrl(tab) : undefined;
+
+  if (!tab || !url) {
+    setStatus('Only normal web pages can be added to the Reading List.');
+    return;
+  }
+
+  if (!chrome.readingList) {
+    setStatus('Chrome Reading List is not available in this browser.');
+    return;
+  }
+
+  readingListPendingTabIds.add(tabId);
+  render();
+
+  try {
+    const existingEntries = await chrome.readingList.query({ url });
+
+    if (existingEntries.length > 0) {
+      readingListUrls.add(url);
+      setStatus('That tab is already in the Reading List.');
+      return;
+    }
+
+    await chrome.readingList.addEntry({
+      title: tab.title,
+      url,
+      hasBeenRead: false
+    });
+    readingListUrls.add(url);
+    setStatus('Added to Reading List.');
+  } catch {
+    setStatus('Tab Eagle could not add that tab to the Reading List.');
+  } finally {
+    readingListPendingTabIds.delete(tabId);
+    render();
+  }
 }
 
 async function closeManagedTab(tabId: number): Promise<void> {

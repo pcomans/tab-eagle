@@ -85,7 +85,7 @@ h1 {
 }
 
 .sort-control {
-  min-width: 424px;
+  min-width: 320px;
   --md-outlined-segmented-button-container-height: 40px;
   --md-outlined-segmented-button-outline-color: var(--md-sys-color-outline);
   --md-outlined-segmented-button-selected-container-color: var(--md-sys-color-secondary-container);
@@ -164,6 +164,28 @@ h1 {
   box-shadow: var(--md-sys-elevation-level1);
 }
 
+.tab-card.is-domain-colored {
+  background: var(--domain-card-container);
+  border-color: var(--domain-card-outline);
+  color: var(--domain-card-on-container);
+}
+
+.tab-card.is-domain-colored:hover {
+  background: var(--domain-card-container);
+  border-color: var(--domain-card-primary);
+}
+
+.tab-card.is-age-colored {
+  background: var(--age-card-container);
+  border-color: var(--age-card-outline);
+  color: var(--age-card-on-container);
+}
+
+.tab-card.is-age-colored:hover {
+  background: var(--age-card-container);
+  border-color: var(--age-card-primary);
+}
+
 .tab-card:active {
   transform: translateY(1px);
   box-shadow: none;
@@ -192,6 +214,20 @@ h1 {
   --md-icon-button-pressed-state-layer-opacity: 0.12;
 }
 
+.tab-card.is-domain-colored .close-button {
+  color: var(--domain-card-on-container);
+  --md-icon-button-hover-state-layer-color: var(--domain-card-on-container);
+  --md-icon-button-focus-state-layer-color: var(--domain-card-primary);
+  --md-icon-button-pressed-state-layer-color: var(--domain-card-primary);
+}
+
+.tab-card.is-age-colored .close-button {
+  color: var(--age-card-on-container);
+  --md-icon-button-hover-state-layer-color: var(--age-card-on-container);
+  --md-icon-button-focus-state-layer-color: var(--age-card-primary);
+  --md-icon-button-pressed-state-layer-color: var(--age-card-primary);
+}
+
 .material-icon {
   width: 20px;
   height: 20px;
@@ -206,10 +242,23 @@ h1 {
   padding-right: 36px;
 }
 
+.favicon-frame,
 .favicon {
   width: 32px;
   height: 32px;
+}
+
+.favicon-frame {
+  position: relative;
+}
+
+.favicon {
   border-radius: 6px;
+}
+
+.favicon-image {
+  display: block;
+  object-fit: cover;
 }
 
 .favicon.fallback {
@@ -218,6 +267,10 @@ h1 {
   background: var(--md-sys-color-surface-container-highest);
   color: var(--md-sys-color-on-surface-variant);
   font-weight: 700;
+}
+
+.favicon.fallback.is-hidden {
+  display: none;
 }
 
 .tab-copy {
@@ -234,6 +287,18 @@ h1 {
   white-space: nowrap;
 }
 
+.tab-card.is-domain-colored .domain,
+.tab-card.is-domain-colored .last-accessed,
+.tab-card.is-domain-colored .tab-meta-item {
+  color: var(--domain-card-on-container);
+}
+
+.tab-card.is-age-colored .domain,
+.tab-card.is-age-colored .last-accessed,
+.tab-card.is-age-colored .tab-meta-item {
+  color: var(--age-card-on-container);
+}
+
 .tab-copy h2 {
   margin: 0;
   color: var(--md-sys-color-on-surface);
@@ -247,6 +312,14 @@ h1 {
   overflow: hidden;
 }
 
+.tab-card.is-domain-colored .tab-copy h2 {
+  color: var(--domain-card-on-container);
+}
+
+.tab-card.is-age-colored .tab-copy h2 {
+  color: var(--age-card-on-container);
+}
+
 .last-accessed {
   margin-top: 8px;
   color: var(--md-sys-color-on-surface-variant);
@@ -255,13 +328,48 @@ h1 {
   font-weight: 500;
 }
 
+.card-footer {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 10px;
+  min-height: 40px;
+  margin-top: 12px;
+  overflow: hidden;
+}
+
 .tab-meta {
   display: flex;
-  align-items: end;
+  align-items: center;
   flex-wrap: wrap;
   gap: 10px;
-  min-height: 22px;
-  margin-top: 12px;
+  min-width: 0;
+  min-height: 40px;
+}
+
+.reading-list-button {
+  margin-left: -8px;
+  --md-text-button-icon-size: 16px;
+  --md-text-button-label-text-size: 12px;
+  --md-text-button-label-text-weight: 650;
+  --md-text-button-label-text-color: var(--md-sys-color-primary);
+  --md-text-button-hover-label-text-color: var(--md-sys-color-primary);
+  --md-text-button-focus-label-text-color: var(--md-sys-color-primary);
+  --md-text-button-pressed-label-text-color: var(--md-sys-color-primary);
+}
+
+.tab-card.is-domain-colored .reading-list-button {
+  --md-text-button-label-text-color: var(--domain-card-primary);
+  --md-text-button-hover-label-text-color: var(--domain-card-primary);
+  --md-text-button-focus-label-text-color: var(--domain-card-primary);
+  --md-text-button-pressed-label-text-color: var(--domain-card-primary);
+}
+
+.tab-card.is-age-colored .reading-list-button {
+  --md-text-button-label-text-color: var(--age-card-primary);
+  --md-text-button-hover-label-text-color: var(--age-card-primary);
+  --md-text-button-focus-label-text-color: var(--age-card-primary);
+  --md-text-button-pressed-label-text-color: var(--age-card-primary);
 }
 
 .tab-meta-item {
@@ -277,6 +385,14 @@ h1 {
 
 .tab-card.is-origin .tab-meta-item:first-child {
   color: var(--md-sys-color-primary);
+}
+
+.tab-card.is-origin.is-domain-colored .tab-meta-item:first-child {
+  color: var(--domain-card-primary);
+}
+
+.tab-card.is-origin.is-age-colored .tab-meta-item:first-child {
+  color: var(--age-card-primary);
 }
 
 .status-icon {

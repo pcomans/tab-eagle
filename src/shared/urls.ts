@@ -16,3 +16,18 @@ export function isEagleUrl(tabUrl: string | undefined, eagleBaseUrl = getEagleBa
   if (!tabUrl) return false;
   return tabUrl === eagleBaseUrl || tabUrl.startsWith(`${eagleBaseUrl}?`);
 }
+
+export function getEagleSourceTabId(tabUrl: string | undefined, eagleBaseUrl = getEagleBaseUrl()): number | undefined {
+  if (!tabUrl || !isEagleUrl(tabUrl, eagleBaseUrl)) return undefined;
+
+  try {
+    const url = new URL(tabUrl);
+    const sourceTabIdParam = url.searchParams.get('sourceTabId');
+    if (!sourceTabIdParam) return undefined;
+
+    const sourceTabId = Number(sourceTabIdParam);
+    return Number.isInteger(sourceTabId) ? sourceTabId : undefined;
+  } catch {
+    return undefined;
+  }
+}

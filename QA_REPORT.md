@@ -16,7 +16,17 @@ The 2026-06-29 MD3 visual refresh replaced the green palette with a sky-blue acc
 
 The multi-row close-button stability issue has been addressed with temporary hidden reserve slots. Visible cards still slide into the empty slot after a close, but the grid keeps its total height while the cursor remains inside the card grid, so removing enough tabs to eliminate a row no longer pulls the page upward under the cursor. Reserve slots release after the pointer leaves the grid.
 
-The attention-sorting update adds human-readable last-used ages to cards and extends the sort control to Position, Domain, Recent, and Least Recent. Local `file://` favicon URLs are filtered out before rendering so local-resource console warnings fall back to the letter tile instead of attempting a blocked load.
+Tab cards now reserve the same footer height across pinned and unpinned states. `Pinned`, `Origin`, and `Read later` share one left-aligned footer lane, so changing a tab between pinned and unpinned does not alter the card shape.
+
+The attention-sorting update adds human-readable last-used ages to cards and extends the sort control to Position, Domain, and Recent. Clicking Recent again toggles between newest-first and oldest-first; Position and Domain do not toggle on repeated clicks. Local `file://` favicon URLs are filtered out before rendering so local-resource console warnings fall back to the letter tile instead of attempting a blocked load. Favicon image load failures also fall back to the same fixed-size letter tile.
+
+The Domain sort color update uses Chrome's MV3 favicon endpoint and Material Color Utilities to derive Material role colors from favicons. Cards remain neutral in other sort modes. In Domain sort, each domain is tinted with MD3-generated `secondaryContainer` / `onSecondaryContainer` colors, with fallback to neutral cards when favicon extraction is unavailable.
+
+The age sort color update adds Trello-inspired age buckets using Material Color Utilities instead of texture overlays. The Recent sort, in either direction, tints cards blue when used in the last 5 minutes, keeps cards neutral from 5 minutes to 1 hour, then warms cards after 1 hour, 6 hours, 1 day, 3 days, and 1 week. Age bucket colors use fixed Material HCT tones so the colored card surfaces have roughly consistent luminance across hues. Tabs with unknown access time remain neutral. Domain colors and age colors are mutually exclusive because they only apply in their respective sort modes.
+
+The Reading List update adds an MD3 text button to each normal web tab card for saving it to Chrome's built-in Reading List. Pinned tabs keep the icon-and-label `Pinned` metadata in the footer and do not show `Read later`, since Chrome does not allow pinned tabs to be added to Reading List. The feature uses Chrome's `readingList` permission and does not add host permissions or all-site data access. After reloading the unpacked extension, Chrome showed the new `Read and change entries in the reading list` permission and still showed `This extension has no additional site access`.
+
+The keyboard shortcut update binds the macOS suggested shortcut `Command+Shift+E` to Chrome's `_execute_action` command, which reuses the same toolbar-action path that opens Tab Eagle. When Tab Eagle is already active, the same shortcut hides it by activating the recorded source tab; if that source tab no longer exists, it falls back to another non-Eagle tab in the same window. If Chrome detects a local shortcut conflict, the user can inspect or remap the shortcut at `chrome://extensions/shortcuts`.
 
 ## Screenshots
 
@@ -54,11 +64,11 @@ Earlier exploratory screenshots are still in `qa-screenshots/`, but screenshots 
 
 9. Stable card sizing and close placement: Pass. Card sizes and Material icon close buttons are stable within each card. A 60-tab, five-column grid was tested by closing five cards from the same close-button coordinate; the count changed to 55 and the multi-row grid did not jump during the close burst.
 
-10. Toggle Position / Domain / Recent / Least Recent: Pass by automated coverage. The Material Web outlined segmented button control now exposes all four modes, persisted through the existing storage path.
+10. Toggle Position / Domain / Recent: Pass by automated coverage. The Material Web outlined segmented button control exposes three visible modes. Unit tests verify that only Recent toggles on repeated clicks, switching between newest-first and oldest-first; repeated Position or Domain clicks keep the same mode.
 
 11. Domain sorting continuous without headings: Pass. Domain-sorted cards stayed in one continuous grid.
 
-12. Avoid all-site data access: Pass. Chrome showed `This extension has no additional site access`. The `tabs` permission still appears as `Read your browsing history`.
+12. Avoid all-site data access: Pass. The manifest has no host permissions. It uses `tabs`, `storage`, `readingList`, and `favicon`; the `tabs` permission still appears as `Read your browsing history`.
 
 13. Explicit way to return to origin: Pass. `Return to origin` activated the origin tab and left Tab Eagle open.
 
@@ -74,9 +84,17 @@ Earlier exploratory screenshots are still in `qa-screenshots/`, but screenshots 
 
 19. Show human-readable last accessed age: Pass by automated coverage. Cards render Chrome's `lastAccessed` timestamp as compact age text such as `Last used just now`, `Last used 12m ago`, or `Last used 3d ago`; missing values show `Last used unknown`.
 
-20. Sort by recently used or least recently used: Pass by automated coverage. Unit tests cover both timestamp sort directions and keep tabs without `lastAccessed` after tabs with known access times.
+20. Sort by recently used or least recently used: Pass by automated coverage. Unit tests cover both timestamp sort directions, keep tabs without `lastAccessed` after tabs with known access times, and verify the Recent control toggles between the two directions when clicked repeatedly.
 
-21. Avoid local favicon resource warnings: Pass by automated coverage. Unit tests verify `file://` favicon URLs are dropped before rendering, while web, data, and extension favicon URLs are preserved.
+21. Avoid local favicon resource warnings and broken favicon UI: Pass. Unit tests verify `file://` favicon URLs are dropped before rendering, while web, data, and extension favicon URLs are preserved. Card rendering also listens for favicon image load failures and replaces the broken image with the fixed-size letter fallback.
+
+22. Color domains from favicon in Domain sort: Pass. Unit tests verify MD3 role color generation from a source color and Chrome MV3 favicon endpoint construction. After reloading the unpacked extension and selecting Domain sort, cards were visibly tinted by domain while other sort modes remained neutral. Domain colors are requested only in Domain sort and cached per domain.
+
+23. Color age-sorted cards with Trello-inspired age buckets: Pass by automated coverage. Unit tests verify that age coloring is enabled only for Recent sorting in either direction, with a blue bucket under 5 minutes, neutral cards from 5 minutes to 1 hour, warm buckets at 1 hour, 6 hours, 1 day, 3 days, and 1 week, and no separate 14-day bucket. The bucket colors are generated through Material Color Utilities, normalized to a shared HCT container tone, and applied through MD3 role variables.
+
+24. Add tab to Chrome Reading List: Pass. Normal web tab cards render an icon-leading MD3 `md-text-button` in the same lower-left footer position as labels like `Pinned`; pinned tabs show only `Pinned`, making the states exclusive. The action calls `chrome.readingList.addEntry()` for normal `http` and `https` tabs, disables itself for non-web URLs, and shows a status message on success or failure. Live test used a disposable `https://example.com/?tab-eagle-test=1` tab; clicking `Read later` showed `Added to Reading List.` and changed the button to disabled `In Reading List`.
+
+25. Toggle Tab Eagle with Command+Shift+E on macOS: Pass. The built Manifest V3 extension declares `_execute_action` with the macOS suggested key `Command+Shift+E`; after reloading the unpacked extension, pressing the shortcut from the extension details page opened Tab Eagle, and pressing it again while Tab Eagle was active returned to the recorded source tab while leaving the Tab Eagle tab open.
 
 ## Verification Commands
 
