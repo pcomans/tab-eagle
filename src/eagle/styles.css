@@ -49,11 +49,11 @@ button {
 }
 
 .top-bar {
-  display: flex;
+  display: grid;
+  grid-template-columns: max-content minmax(320px, 1fr) max-content;
   align-items: center;
-  justify-content: space-between;
-  gap: 20px;
-  margin: 0 auto 14px;
+  gap: 16px 24px;
+  margin: 0 auto 18px;
   max-width: 1440px;
 }
 
@@ -80,8 +80,20 @@ h1 {
   display: flex;
   align-items: center;
   justify-content: flex-end;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   gap: 10px;
+  min-width: 0;
+}
+
+.tab-search {
+  width: 100%;
+  --md-outlined-text-field-container-shape: 8px;
+  --md-outlined-text-field-container-height: 48px;
+  --md-outlined-text-field-outline-color: var(--md-sys-color-outline);
+  --md-outlined-text-field-focus-outline-color: var(--md-sys-color-primary);
+  --md-outlined-text-field-input-text-color: var(--md-sys-color-on-surface);
+  --md-outlined-text-field-label-text-color: var(--md-sys-color-on-surface-variant);
+  --md-outlined-text-field-focus-label-text-color: var(--md-sys-color-primary);
 }
 
 .sort-control {
@@ -97,6 +109,10 @@ h1 {
   --md-outlined-segmented-button-unselected-pressed-state-layer-color: var(--md-sys-color-primary);
   --md-outlined-segmented-button-label-text-size: 13px;
   --md-outlined-segmented-button-label-text-weight: 600;
+}
+
+#return-origin {
+  min-width: 168px;
 }
 
 .tab-card:focus-visible,
@@ -425,22 +441,54 @@ h1 {
   color: var(--md-sys-color-on-surface-variant);
 }
 
+@media (max-width: 1180px) {
+  .top-bar {
+    grid-template-columns: minmax(0, 1fr) max-content;
+    align-items: stretch;
+  }
+
+  .tab-search {
+    grid-column: 1 / -1;
+    grid-row: 2;
+  }
+
+  .toolbar {
+    grid-column: 2;
+    grid-row: 1;
+  }
+}
+
+@media (max-width: 920px) {
+  .toolbar {
+    grid-column: 1 / -1;
+    grid-row: 3;
+    justify-content: stretch;
+  }
+
+  #return-origin {
+    min-width: 0;
+  }
+}
+
 @media (max-width: 760px) {
   .app-shell {
     padding: 16px;
   }
 
-  .top-bar {
-    align-items: stretch;
+  .toolbar {
     flex-direction: column;
+    align-items: stretch;
   }
 
-  .toolbar {
-    align-items: stretch;
-    justify-content: stretch;
+  #return-origin {
+    width: auto;
   }
 
   .sort-control {
+    width: 100%;
+  }
+
+  .tab-search {
     width: 100%;
   }
 

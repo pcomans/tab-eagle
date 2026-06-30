@@ -1,6 +1,14 @@
 import { describe, expect, it } from 'vitest';
 import type { ManagedTab } from '../shared/types';
-import { nextSortMode, normalizeDomain, sortTabs, toReadingListUrl, toRenderableFaviconUrl } from './tab-model';
+import {
+  filterTabsBySearch,
+  nextSortMode,
+  normalizeDomain,
+  normalizeSearchText,
+  sortTabs,
+  toReadingListUrl,
+  toRenderableFaviconUrl
+} from './tab-model';
 
 function tab(id: number, index: number, domain: string, lastAccessed?: number): ManagedTab {
   return {
@@ -87,6 +95,30 @@ describe('sortTabs', () => {
         'leastRecent'
       ).map((item) => item.id)
     ).toEqual([1, 3, 2]);
+  });
+});
+
+describe('normalizeSearchText', () => {
+  it('strips http, https, and www before matching', () => {
+    expect(normalizeSearchText('https://www.Example.com/docs')).toBe('example.com/docs');
+    expect(normalizeSearchText('http://www.Example.com/docs')).toBe('example.com/docs');
+  });
+});
+
+describe('filterTabsBySearch', () => {
+  it('matches tab titles', () => {
+    const first = { ...tab(1, 0, 'example.com'), title: 'Quarterly planning notes' };
+    const second = { ...tab(2, 1, 'example.com'), title: 'Inbox' };
+
+    expect(filterTabsBySearch([first, second], 'planning').map((item) => item.id)).toEqual([1]);
+  });
+
+  it('matches normalized tab URLs without requiring https or www', () => {
+    const first = { ...tab(1, 0, 'example.com'), url: 'https://www.example.com/reports?view=open' };
+    const second = { ...tab(2, 1, 'github.com'), url: 'https://github.com/pcomans/tab-eagle' };
+
+    expect(filterTabsBySearch([first, second], 'example.com/reports').map((item) => item.id)).toEqual([1]);
+    expect(filterTabsBySearch([first, second], 'www.github.com/pcomans').map((item) => item.id)).toEqual([2]);
   });
 });
 

@@ -95,6 +95,28 @@ export function sortTabs(tabs: ManagedTab[], sortMode: SortMode): ManagedTab[] {
   return copy.sort((left, right) => left.index - right.index);
 }
 
+export function filterTabsBySearch(tabs: ManagedTab[], rawQuery: string): ManagedTab[] {
+  const query = normalizeSearchText(rawQuery);
+  if (!query) return tabs;
+
+  return tabs.filter((tab) => searchableTextForTab(tab).includes(query));
+}
+
+export function normalizeSearchText(value: string | undefined): string {
+  if (!value) return '';
+
+  return value
+    .toLowerCase()
+    .replace(/\bhttps?:\/\//g, '')
+    .replace(/\bwww\./g, '')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+function searchableTextForTab(tab: ManagedTab): string {
+  return normalizeSearchText([tab.title, tab.url, tab.pendingUrl].filter(Boolean).join(' '));
+}
+
 export function nextSortMode(currentSortMode: SortMode, requestedSortMode: SortMode): SortMode {
   if (requestedSortMode === 'recent' && (currentSortMode === 'recent' || currentSortMode === 'leastRecent')) {
     return currentSortMode === 'recent' ? 'leastRecent' : 'recent';

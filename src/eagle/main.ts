@@ -5,6 +5,7 @@ import '@material/web/iconbutton/icon-button.js';
 import '@material/web/labs/segmentedbutton/outlined-segmented-button.js';
 import '@material/web/labs/segmentedbuttonset/outlined-segmented-button-set.js';
 import '@material/web/ripple/ripple.js';
+import '@material/web/textfield/outlined-text-field.js';
 import './styles.css';
 
 import type { EagleState, ManagedTab, SortMode } from '../shared/types';
@@ -12,7 +13,7 @@ import { getEagleBaseUrl, isEagleUrl } from '../shared/urls';
 import { ageBucketForLastAccessed, colorsForAgeBucket, isAgeSortMode } from './age-colors';
 import { colorsFromImage, faviconUrlForPageUrl, loadImage, type DomainCardColors } from './domain-colors';
 import { closeIconSvg, readingListIconSvg, statusIconSvg } from './icons';
-import { nextSortMode, sortTabs, toManagedTab, toReadingListUrl } from './tab-model';
+import { filterTabsBySearch, nextSortMode, sortTabs, toManagedTab, toReadingListUrl } from './tab-model';
 
 const SORT_STORAGE_KEY = 'sortMode';
 const CLOSE_RESERVE_TIMEOUT_MS = 1800;
@@ -20,6 +21,7 @@ const CLOSE_RESERVE_TIMEOUT_MS = 1800;
 let state: EagleState;
 let managedTabs: ManagedTab[] = [];
 let orderedTabs: ManagedTab[] = [];
+let searchQuery = '';
 let refreshTimer: number | undefined;
 let closeReserveSlots = 0;
 let closeReserveTimer: number | undefined;
@@ -33,6 +35,7 @@ const grid = requiredElement<HTMLDivElement>('#tab-grid');
 const tabCount = requiredElement<HTMLParagraphElement>('#tab-count');
 const statusEl = requiredElement<HTMLDivElement>('#status');
 const returnOriginButton = requiredElement<HTMLElement>('#return-origin');
+const searchInput = requiredElement<HTMLElement & { value: string }>('#tab-search');
 const sortButtons = Array.from(document.querySelectorAll<HTMLElement>('[data-sort]'));
 
 void init();
@@ -90,6 +93,11 @@ function bindEvents(): void {
     void returnToOrigin();
   });
 
+  searchInput.addEventListener('input', () => {
+    searchQuery = searchInput.value;
+    render();
+  });
+
   grid.addEventListener('pointerenter', () => {
     isPointerInsideGrid = true;
   });
@@ -100,6 +108,12 @@ function bindEvents(): void {
   });
 
   document.addEventListener('keydown', (event) => {
+    if (event.key === 'Escape' && searchQuery) {
+      event.preventDefault();
+      setSearchQuery('');
+      return;
+    }
+
     if (event.key === 'Escape') {
       event.preventDefault();
       void returnToOrigin();
@@ -121,6 +135,19 @@ function bindEvents(): void {
         event.preventDefault();
         moveSelection(event.key === 'ArrowRight' || event.key === 'ArrowDown' ? 1 : -1);
       }
+    }
+
+    if (isSearchKeystroke(event)) {
+      event.preventDefault();
+      setSearchQuery(searchQuery + event.key);
+      focusSearchInput();
+      return;
+    }
+
+    if (event.key === 'Backspace' && searchQuery && !isEditableTarget(event.target)) {
+      event.preventDefault();
+      setSearchQuery(searchQuery.slice(0, -1));
+      focusSearchInput();
     }
   });
 
@@ -273,8 +300,10 @@ function isSortMode(value: unknown): value is SortMode {
 }
 
 function render(): void {
+  const visibleTabs = filterTabsBySearch(orderedTabs, searchQuery);
+
   grid.replaceChildren();
-  tabCount.textContent = `${orderedTabs.length} ${orderedTabs.length === 1 ? 'tab' : 'tabs'}`;
+  tabCount.textContent = countLabel(visibleTabs.length, orderedTabs.length);
   returnOriginButton.toggleAttribute('disabled', !state.originTabId);
 
   if (orderedTabs.length === 0 && closeReserveSlots === 0) {
@@ -292,7 +321,23 @@ function render(): void {
     return;
   }
 
-  for (const tab of orderedTabs) {
+  if (visibleTabs.length === 0 && closeReserveSlots === 0) {
+    const empty = document.createElement('div');
+    empty.className = 'empty-state';
+    empty.innerHTML = `
+      <h2>No matching tabs</h2>
+      <p>Try a title or URL without https:// or www.</p>
+      <md-filled-button id="clear-search" type="button">Clear search</md-filled-button>
+    `;
+    grid.append(empty);
+    empty.querySelector('#clear-search')?.addEventListener('click', () => {
+      setSearchQuery('');
+      focusSearchInput();
+    });
+    return;
+  }
+
+  for (const tab of visibleTabs) {
     if (state.sortMode === 'domain') {
       void ensureDomainColor(tab);
     }
@@ -531,14 +576,47 @@ function formatLastAccessed(lastAccessed: number | undefined, now = Date.now()):
 }
 
 function moveSelection(delta: number): void {
-  if (orderedTabs.length === 0) return;
+  const visibleTabs = filterTabsBySearch(orderedTabs, searchQuery);
+  if (visibleTabs.length === 0) return;
 
   const activeTabId = Number((document.activeElement as HTMLElement | null)?.dataset.tabId);
-  const currentIndex = orderedTabs.findIndex((tab) => tab.id === activeTabId);
-  const nextIndex = Math.min(Math.max((currentIndex < 0 ? 0 : currentIndex) + delta, 0), orderedTabs.length - 1);
-  const nextTabId = orderedTabs[nextIndex]?.id;
+  const currentIndex = visibleTabs.findIndex((tab) => tab.id === activeTabId);
+  const nextIndex = Math.min(Math.max((currentIndex < 0 ? 0 : currentIndex) + delta, 0), visibleTabs.length - 1);
+  const nextTabId = visibleTabs[nextIndex]?.id;
   const nextCard = grid.querySelector<HTMLElement>(`.tab-card[data-tab-id="${nextTabId}"]`);
   nextCard?.focus();
+}
+
+function setSearchQuery(query: string): void {
+  searchQuery = query;
+  searchInput.value = query;
+  render();
+}
+
+function focusSearchInput(): void {
+  searchInput.focus();
+}
+
+function countLabel(visibleCount: number, totalCount: number): string {
+  const tabWord = totalCount === 1 ? 'tab' : 'tabs';
+  if (!searchQuery) return `${totalCount} ${tabWord}`;
+  return `${visibleCount} of ${totalCount} ${tabWord}`;
+}
+
+function isSearchKeystroke(event: KeyboardEvent): boolean {
+  return event.key.length === 1 && !event.metaKey && !event.ctrlKey && !event.altKey && !isEditableTarget(event.target);
+}
+
+function isEditableTarget(target: EventTarget | null): boolean {
+  if (!(target instanceof HTMLElement)) return false;
+
+  return (
+    target === searchInput ||
+    target instanceof HTMLInputElement ||
+    target instanceof HTMLTextAreaElement ||
+    target.isContentEditable ||
+    target.tagName.toLowerCase().includes('text-field')
+  );
 }
 
 async function addTabToReadingList(tabId: number): Promise<void> {
