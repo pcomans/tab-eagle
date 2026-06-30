@@ -59,7 +59,7 @@ Tab Eagle does not request host permissions and does not request access to all d
 
 ## Limited Use
 
-Tab Eagle's use of information received from Chrome APIs adheres to the Chrome Web Store User Data Policy, including the Limited Use requirements. Data handled by the extension is used only to provide and improve Tab Eagle's single tab-management purpose.
+Tab Eagle's use of information received from Chrome APIs adheres to the Chrome Web Store User Data Policy, including the Limited Use requirements. The developer does not collect user data. Information handled by the extension stays local in Chrome and is used only by the extension to provide Tab Eagle's single tab-management purpose.
 
 ## Contact
 
