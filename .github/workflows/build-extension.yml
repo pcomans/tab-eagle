@@ -22,10 +22,10 @@ jobs:
 
     steps:
       - name: Check out repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Set up Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
           node-version: 22
           cache: npm
@@ -67,7 +67,7 @@ jobs:
           unzip -l "${{ steps.version.outputs.zip_name }}" | grep -q "manifest.json"
 
       - name: Upload build artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: tab-eagle-${{ steps.version.outputs.version }}
           path: ${{ steps.version.outputs.zip_name }}
@@ -83,7 +83,7 @@ jobs:
 
     steps:
       - name: Download extension package
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: tab-eagle-${{ needs.build.outputs.version }}
 
