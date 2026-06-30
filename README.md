@@ -25,6 +25,7 @@ Tab Eagle uses only:
 - `tabs`
 - `storage`
 - `readingList`
+- `favicon`
 
 It does not request host permissions or all-site data access.
 
