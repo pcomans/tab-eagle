@@ -90,6 +90,7 @@ jobs:
       - name: Publish GitHub Release asset
         env:
           GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
           VERSION: ${{ needs.build.outputs.version }}
           ZIP_NAME: ${{ needs.build.outputs.zip_name }}
         run: |
@@ -98,10 +99,11 @@ jobs:
             exit 1
           fi
 
-          if gh release view "$GITHUB_REF_NAME" >/dev/null 2>&1; then
-            gh release upload "$GITHUB_REF_NAME" "$ZIP_NAME" --clobber
+          if gh release view "$GITHUB_REF_NAME" --repo "$GH_REPO" >/dev/null 2>&1; then
+            gh release upload "$GITHUB_REF_NAME" "$ZIP_NAME" --clobber --repo "$GH_REPO"
           else
             gh release create "$GITHUB_REF_NAME" "$ZIP_NAME" \
               --title "Tab Eagle $VERSION" \
-              --notes "Chrome extension build for Tab Eagle $VERSION."
+              --notes "Chrome extension build for Tab Eagle $VERSION." \
+              --repo "$GH_REPO"
           fi
