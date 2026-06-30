@@ -148,7 +148,6 @@ Already in the repo:
 - `store-assets/icons/tab-eagle-store-icon-128.png`
 - `store-assets/icons/tab-eagle-store-icon-512.png`
 - `store-assets/icons/tab-eagle-store-icon-1024.png`
-- `store-assets/redrawn/redrawn-master-16.png`
 - `store-assets/screenshots/01-overview.png`
 - `store-assets/screenshots/02-type-to-search.png`
 - `store-assets/screenshots/03-domain-sort.png`
