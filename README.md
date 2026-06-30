@@ -36,3 +36,16 @@ npm run typecheck
 npm test
 npm run build
 ```
+
+## Releases
+
+GitHub Actions builds, tests, and packages the extension on pull requests and pushes to `main`.
+
+To publish a GitHub Release with a ZIP attached, make sure `package.json` and `public/manifest.json` have the same version, then push a matching version tag:
+
+```sh
+git tag v0.1.0
+git push origin v0.1.0
+```
+
+The release workflow attaches `tab-eagle-<version>.zip`. Upload that ZIP to the Chrome Web Store.

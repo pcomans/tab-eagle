@@ -6,6 +6,8 @@ This file contains copy and checklist items for publishing Tab Eagle to the Chro
 
 Build and zip the extension from the `dist` folder. The `manifest.json` file must be at the root of the ZIP.
 
+GitHub Actions builds and packages the extension automatically. Push a matching version tag such as `v0.1.0` to create or update a GitHub Release with `tab-eagle-0.1.0.zip` attached.
+
 ```sh
 npm run typecheck
 npm test
@@ -22,7 +24,7 @@ Tab Eagle
 
 ### Short Description
 
-A bird's-eye view for finding, sorting, opening, and closing Chrome tabs.
+A bird's-eye view of your Chrome tabs.
 
 ### Detailed Description
 

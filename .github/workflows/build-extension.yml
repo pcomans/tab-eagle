@@ -1,0 +1,107 @@
+name: Build extension
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+    tags:
+      - "v*"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: Build and package
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+      zip_name: ${{ steps.version.outputs.zip_name }}
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Test
+        run: npm test
+
+      - name: Build
+        run: npm run build
+
+      - name: Read package version
+        id: version
+        run: |
+          PACKAGE_VERSION="$(node -p "require('./package.json').version")"
+          MANIFEST_VERSION="$(node -p "require('./public/manifest.json').version")"
+
+          if [ "$PACKAGE_VERSION" != "$MANIFEST_VERSION" ]; then
+            echo "package.json version ($PACKAGE_VERSION) must match manifest version ($MANIFEST_VERSION)."
+            exit 1
+          fi
+
+          echo "version=$PACKAGE_VERSION" >> "$GITHUB_OUTPUT"
+          echo "zip_name=tab-eagle-$PACKAGE_VERSION.zip" >> "$GITHUB_OUTPUT"
+
+      - name: Package extension
+        run: |
+          cd dist
+          zip -r "../${{ steps.version.outputs.zip_name }}" . -x "*.DS_Store"
+
+      - name: Verify package
+        run: |
+          unzip -l "${{ steps.version.outputs.zip_name }}"
+          unzip -l "${{ steps.version.outputs.zip_name }}" | grep -q "manifest.json"
+
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: tab-eagle-${{ steps.version.outputs.version }}
+          path: ${{ steps.version.outputs.zip_name }}
+          if-no-files-found: error
+
+  release:
+    name: Publish release
+    if: startsWith(github.ref, 'refs/tags/')
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Download extension package
+        uses: actions/download-artifact@v4
+        with:
+          name: tab-eagle-${{ needs.build.outputs.version }}
+
+      - name: Publish GitHub Release asset
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ needs.build.outputs.version }}
+          ZIP_NAME: ${{ needs.build.outputs.zip_name }}
+        run: |
+          if [ "$GITHUB_REF_NAME" != "v$VERSION" ]; then
+            echo "Tag $GITHUB_REF_NAME does not match package version v$VERSION."
+            exit 1
+          fi
+
+          if gh release view "$GITHUB_REF_NAME" >/dev/null 2>&1; then
+            gh release upload "$GITHUB_REF_NAME" "$ZIP_NAME" --clobber
+          else
+            gh release create "$GITHUB_REF_NAME" "$ZIP_NAME" \
+              --title "Tab Eagle $VERSION" \
+              --notes "Chrome extension build for Tab Eagle $VERSION."
+          fi
