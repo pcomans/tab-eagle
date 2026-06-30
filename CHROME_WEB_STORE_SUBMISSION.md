@@ -154,6 +154,7 @@ Already in the repo:
 - `store-assets/screenshots/04-recent-sort.png`
 - `store-assets/promo/small-promo-tile-440x280.png`
 - `store-assets/promo/marquee-promo-tile-1400x560.png`
+- `store-assets/social/github-social-preview.png`
 
 Chrome Web Store screenshots:
 
