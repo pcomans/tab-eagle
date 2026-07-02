@@ -10,7 +10,7 @@ import './styles.css';
 
 import type { EagleState, ManagedTab, SortMode } from '../shared/types';
 import { getEagleBaseUrl, isEagleUrl } from '../shared/urls';
-import { ageBucketForLastAccessed, colorsForAgeBucket, isAgeSortMode } from './age-colors';
+import { ageBucketForLastAccessed, colorsForAgeBucket, isAgeSortMode, type ThemeMode } from './age-colors';
 import { colorsFromImage, faviconUrlForPageUrl, loadImage, type DomainCardColors } from './domain-colors';
 import { closeIconSvg, readingListIconSvg, statusIconSvg } from './icons';
 import {
@@ -36,6 +36,7 @@ let readingListUrls = new Set<string>();
 let readingListPendingTabIds = new Set<number>();
 const domainColorCache = new Map<string, DomainCardColors | null>();
 const domainColorRequests = new Set<string>();
+const colorSchemeQuery = window.matchMedia('(prefers-color-scheme: dark)');
 
 const grid = requiredElement<HTMLDivElement>('#tab-grid');
 const tabCount = requiredElement<HTMLParagraphElement>('#tab-count');
@@ -209,6 +210,12 @@ function bindEvents(): void {
         if (tab.windowId === state.sourceWindowId) scheduleRefresh();
       })
       .catch(() => undefined);
+  });
+
+  colorSchemeQuery.addEventListener('change', () => {
+    domainColorCache.clear();
+    domainColorRequests.clear();
+    render();
   });
 
   if (chrome.readingList) {
@@ -434,7 +441,7 @@ function createTabCard(tab: ManagedTab): HTMLElement {
 function applyDomainCardColors(card: HTMLElement, tab: ManagedTab): void {
   if (state.sortMode !== 'domain') return;
 
-  const colors = domainColorCache.get(tab.domain);
+  const colors = domainColorCache.get(domainColorCacheKey(tab.domain));
   if (!colors) return;
 
   card.classList.add('is-domain-colored');
@@ -450,7 +457,7 @@ function applyAgeCardColors(card: HTMLElement, tab: ManagedTab): void {
   const bucket = ageBucketForLastAccessed(tab.lastAccessed);
   if (!bucket) return;
 
-  const colors = colorsForAgeBucket(bucket);
+  const colors = colorsForAgeBucket(bucket, currentThemeMode());
   card.classList.add('is-age-colored');
   card.style.setProperty('--age-card-container', colors.container);
   card.style.setProperty('--age-card-on-container', colors.onContainer);
@@ -459,28 +466,37 @@ function applyAgeCardColors(card: HTMLElement, tab: ManagedTab): void {
 }
 
 async function ensureDomainColor(tab: ManagedTab): Promise<void> {
-  if (domainColorCache.has(tab.domain) || domainColorRequests.has(tab.domain)) return;
+  const cacheKey = domainColorCacheKey(tab.domain);
+  if (domainColorCache.has(cacheKey) || domainColorRequests.has(cacheKey)) return;
 
   const pageUrl = toReadingListUrl(tab);
   if (!pageUrl) {
-    domainColorCache.set(tab.domain, null);
+    domainColorCache.set(cacheKey, null);
     return;
   }
 
-  domainColorRequests.add(tab.domain);
+  domainColorRequests.add(cacheKey);
 
   try {
     const image = await loadImage(faviconUrlForPageUrl(pageUrl));
-    domainColorCache.set(tab.domain, await colorsFromImage(image));
+    domainColorCache.set(cacheKey, await colorsFromImage(image, currentThemeMode()));
   } catch {
-    domainColorCache.set(tab.domain, null);
+    domainColorCache.set(cacheKey, null);
   } finally {
-    domainColorRequests.delete(tab.domain);
+    domainColorRequests.delete(cacheKey);
   }
 
   if (state.sortMode === 'domain' && orderedTabs.some((item) => item.domain === tab.domain)) {
     render();
   }
+}
+
+function currentThemeMode(): ThemeMode {
+  return colorSchemeQuery.matches ? 'dark' : 'light';
+}
+
+function domainColorCacheKey(domain: string): string {
+  return `${currentThemeMode()}:${domain}`;
 }
 
 function faviconMarkup(tab: ManagedTab): string {

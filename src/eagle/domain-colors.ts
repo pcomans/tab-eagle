@@ -1,4 +1,5 @@
 import { hexFromArgb, sourceColorFromImage, themeFromSourceColor } from '@material/material-color-utilities';
+import type { ThemeMode } from './age-colors';
 
 export interface DomainCardColors {
   container: string;
@@ -7,9 +8,9 @@ export interface DomainCardColors {
   primary: string;
 }
 
-export function colorsFromSourceArgb(sourceArgb: number): DomainCardColors {
+export function colorsFromSourceArgb(sourceArgb: number, themeMode: ThemeMode = 'light'): DomainCardColors {
   const theme = themeFromSourceColor(sourceArgb);
-  const scheme = theme.schemes.light;
+  const scheme = themeMode === 'dark' ? theme.schemes.dark : theme.schemes.light;
 
   return {
     container: hexFromArgb(scheme.secondaryContainer),
@@ -19,9 +20,9 @@ export function colorsFromSourceArgb(sourceArgb: number): DomainCardColors {
   };
 }
 
-export async function colorsFromImage(image: HTMLImageElement): Promise<DomainCardColors> {
+export async function colorsFromImage(image: HTMLImageElement, themeMode: ThemeMode = 'light'): Promise<DomainCardColors> {
   const sourceArgb = await sourceColorFromImage(image);
-  return colorsFromSourceArgb(sourceArgb);
+  return colorsFromSourceArgb(sourceArgb, themeMode);
 }
 
 export function faviconUrlForPageUrl(pageUrl: string): string {
