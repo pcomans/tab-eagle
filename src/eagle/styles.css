@@ -1,5 +1,5 @@
 :root {
-  color-scheme: light;
+  color-scheme: light dark;
   --md-ref-typeface-brand: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   --md-ref-typeface-plain: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   --md-sys-color-primary: #00658f;
@@ -18,6 +18,11 @@
   --md-sys-color-surface-container-highest: #e2e5e9;
   --md-sys-color-outline: #70787f;
   --md-sys-color-outline-variant: #c0c7cf;
+  --tab-eagle-sky: #dff3ff;
+  --tab-eagle-sky-horizon: var(--md-sys-color-surface);
+  --tab-eagle-sky-depth: 430px;
+  --tab-eagle-cloud: var(--md-sys-color-surface);
+  --tab-eagle-cloud-shadow: var(--md-sys-color-surface-container-high);
   --md-sys-shape-corner-small: 4px;
   --md-sys-shape-corner-medium: 6px;
   --md-sys-shape-corner-large: 8px;
@@ -28,6 +33,63 @@
   color: var(--md-sys-color-on-surface);
 }
 
+@media (prefers-color-scheme: dark) {
+  :root {
+    --md-sys-color-primary: #82cffd;
+    --md-sys-color-on-primary: #00344d;
+    --md-sys-color-primary-container: #004c6d;
+    --md-sys-color-on-primary-container: #c7e7ff;
+    --md-sys-color-secondary: #b8c8d6;
+    --md-sys-color-secondary-container: #394954;
+    --md-sys-color-on-secondary-container: #d4e4f2;
+    --md-sys-color-surface: #101418;
+    --md-sys-color-on-surface: #e0e3e7;
+    --md-sys-color-on-surface-variant: #c0c7cf;
+    --md-sys-color-surface-container-low: #181c20;
+    --md-sys-color-surface-container: #1c2024;
+    --md-sys-color-surface-container-high: #272a2f;
+    --md-sys-color-surface-container-highest: #32353a;
+    --md-sys-color-outline: #8a9299;
+    --md-sys-color-outline-variant: #40484f;
+    --tab-eagle-sky: #0c2332;
+    --tab-eagle-sky-horizon: var(--md-sys-color-surface);
+    --tab-eagle-cloud: var(--md-sys-color-surface-container-highest);
+    --tab-eagle-cloud-shadow: var(--md-sys-color-surface-container);
+    --md-sys-elevation-level1: 0 1px 2px rgba(0, 0, 0, 0.32), 0 1px 3px 1px rgba(0, 0, 0, 0.24);
+    --md-sys-elevation-level2: 0 1px 2px rgba(0, 0, 0, 0.36), 0 2px 6px 2px rgba(0, 0, 0, 0.28);
+  }
+}
+
+:root[data-color-scheme="light"] {
+  color-scheme: light;
+}
+
+:root[data-color-scheme="dark"] {
+  color-scheme: dark;
+  --md-sys-color-primary: #82cffd;
+  --md-sys-color-on-primary: #00344d;
+  --md-sys-color-primary-container: #004c6d;
+  --md-sys-color-on-primary-container: #c7e7ff;
+  --md-sys-color-secondary: #b8c8d6;
+  --md-sys-color-secondary-container: #394954;
+  --md-sys-color-on-secondary-container: #d4e4f2;
+  --md-sys-color-surface: #101418;
+  --md-sys-color-on-surface: #e0e3e7;
+  --md-sys-color-on-surface-variant: #c0c7cf;
+  --md-sys-color-surface-container-low: #181c20;
+  --md-sys-color-surface-container: #1c2024;
+  --md-sys-color-surface-container-high: #272a2f;
+  --md-sys-color-surface-container-highest: #32353a;
+  --md-sys-color-outline: #8a9299;
+  --md-sys-color-outline-variant: #40484f;
+  --tab-eagle-sky: #0c2332;
+  --tab-eagle-sky-horizon: var(--md-sys-color-surface);
+  --tab-eagle-cloud: var(--md-sys-color-surface-container-highest);
+  --tab-eagle-cloud-shadow: var(--md-sys-color-surface-container);
+  --md-sys-elevation-level1: 0 1px 2px rgba(0, 0, 0, 0.32), 0 1px 3px 1px rgba(0, 0, 0, 0.24);
+  --md-sys-elevation-level2: 0 1px 2px rgba(0, 0, 0, 0.36), 0 2px 6px 2px rgba(0, 0, 0, 0.28);
+}
+
 * {
   box-sizing: border-box;
 }
@@ -36,7 +98,10 @@ body {
   margin: 0;
   min-width: 320px;
   min-height: 100vh;
-  background: var(--md-sys-color-surface);
+  background:
+    linear-gradient(180deg, var(--tab-eagle-sky) 0%, var(--tab-eagle-sky-horizon) var(--tab-eagle-sky-depth)),
+    var(--md-sys-color-surface);
+  overflow-x: hidden;
 }
 
 button {
@@ -44,11 +109,105 @@ button {
 }
 
 .app-shell {
+  position: relative;
+  isolation: isolate;
   min-height: 100vh;
   padding: 20px 24px 24px;
 }
 
+.sky-background {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  overflow: hidden;
+  background:
+    radial-gradient(circle at 22% 12%, color-mix(in srgb, var(--md-sys-color-primary-container) 36%, transparent), transparent 24%),
+    linear-gradient(180deg, var(--tab-eagle-sky) 0%, var(--tab-eagle-sky-horizon) var(--tab-eagle-sky-depth));
+}
+
+.cloud {
+  position: absolute;
+  display: block;
+  width: var(--cloud-width);
+  height: var(--cloud-height);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--tab-eagle-cloud) 92%, transparent);
+  border: 1px solid color-mix(in srgb, var(--tab-eagle-cloud-shadow) 76%, transparent);
+  opacity: var(--cloud-opacity);
+  filter: blur(0.2px);
+  animation: cloud-drift var(--cloud-duration) ease-in-out infinite alternate;
+}
+
+.cloud::before,
+.cloud::after {
+  content: "";
+  position: absolute;
+  bottom: 28%;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--tab-eagle-cloud) 94%, transparent);
+}
+
+.cloud::before {
+  left: 18%;
+  width: 34%;
+  height: 86%;
+}
+
+.cloud::after {
+  right: 16%;
+  width: 42%;
+  height: 112%;
+}
+
+.cloud-one {
+  --cloud-width: 260px;
+  --cloud-height: 72px;
+  --cloud-opacity: 0.9;
+  --cloud-duration: 18s;
+  top: 94px;
+  left: max(32px, calc((100vw - 1440px) / 2 + 252px));
+}
+
+.cloud-two {
+  --cloud-width: 300px;
+  --cloud-height: 82px;
+  --cloud-opacity: 0.62;
+  --cloud-duration: 24s;
+  top: 420px;
+  right: max(40px, calc((100vw - 1440px) / 2 + 24px));
+  animation-delay: -8s;
+}
+
+.cloud-three {
+  --cloud-width: 180px;
+  --cloud-height: 54px;
+  --cloud-opacity: 0.54;
+  --cloud-duration: 21s;
+  top: 68vh;
+  left: max(28px, calc((100vw - 1440px) / 2 + 180px));
+  animation-delay: -14s;
+}
+
+@keyframes cloud-drift {
+  from {
+    transform: translate3d(-8px, 0, 0);
+  }
+
+  to {
+    transform: translate3d(10px, -4px, 0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cloud {
+    animation: none;
+  }
+}
+
 .top-bar {
+  position: relative;
+  z-index: 1;
   display: grid;
   grid-template-columns: max-content minmax(320px, 1fr) max-content;
   align-items: center;
@@ -128,20 +287,24 @@ h1 {
 
 .tab-card:focus-visible,
 .close-button:focus-visible {
-  outline: 3px solid #82cffd;
+  outline: 3px solid var(--md-sys-color-primary);
   outline-offset: 2px;
 }
 
 .status {
+  position: relative;
+  z-index: 1;
   min-height: 24px;
   max-width: 1440px;
   margin: 0 auto 8px;
-  color: #5e4f00;
+  color: var(--md-sys-color-on-surface-variant);
   font-size: 14px;
   line-height: 20px;
 }
 
 .tab-grid {
+  position: relative;
+  z-index: 1;
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(236px, 1fr));
   gap: 12px;
