@@ -40,27 +40,41 @@
 
 19. As a user, I want search to ignore URL noise such as `https://` and `www.` so the terms I naturally type match the tabs I expect.
 
-20. As a user, I want to toggle between Position, Domain, and Recent sorting so I can view tabs by browser order, website, or attention.
+20. As a user, I want the first visible search result to be highlighted by default so I can press Enter immediately when the top result is the tab I want.
 
-21. As a user, I want to click Recent once for recently used tabs and click it again for least recently used tabs so I can manage tabs by attention without adding another sort segment.
+21. As a user, I want the highlighted search result to reset to the first visible result whenever my search query changes so keyboard selection stays predictable.
 
-22. As a user, I want the extension to remember my chosen ordering mode so I do not have to reset it every time I open Tab Eagle.
+22. As a user, I want to use the arrow keys to move the highlight through visible search results so I can select a result without leaving the keyboard.
 
-23. As a user, I want domain sorting to be continuous without extra section headers so Tab Eagle stays simple.
+23. As a user, when arrow-key navigation moves the highlight to a result outside the viewport, I want Tab Eagle to scroll that result into view so I can always see my current keyboard target.
 
-24. As a user, I want domain-sorted cards to use colors derived from each domain's favicon so sites are easier to scan visually.
+24. As a user, I want to press Enter to activate the highlighted tab while leaving the Tab Eagle tab open so keyboard opening behaves like clicking a tab card.
 
-25. As a user, I want tab cards to show when a tab was last accessed in human-readable age format so I can find tabs I have not used recently.
+25. As a user, I want pressing Enter with no search results to do nothing and avoid errors so an empty search state feels stable.
 
-26. As a user, I want age-sorted cards to show a subtle blue tint when used in the last 5 minutes, stay neutral until 1 hour, and become progressively warmer after 1 hour, 6 hours, 1 day, 3 days, and 1 week so neglected tabs stand out without adding extra labels.
+26. As a user, I want the highlight to stay on the same tab when possible after live tab updates so background tab changes do not unexpectedly move my keyboard target.
 
-27. As a user, I want to add any normal web tab to Chrome's Reading List from its tab card so I can save it for later before closing or switching away.
+27. As a user, I want to toggle between Position, Domain, and Recent sorting so I can view tabs by browser order, website, or attention.
 
-28. As a user, I want pinned tabs to show their pinned state instead of a Reading List action so mutually exclusive card actions do not shift the card shape.
+28. As a user, I want to click Recent once for recently used tabs and click it again for least recently used tabs so I can manage tabs by attention without adding another sort segment.
 
-29. As a user, I want the extension to avoid requesting access to all site data so I can trust that it is only managing tabs, not reading page contents.
+29. As a user, I want the extension to remember my chosen ordering mode so I do not have to reset it every time I open Tab Eagle.
 
-30. As a user, I want Tab Eagle to avoid sending my tab data to any developer-operated server so my tab overview stays local in Chrome.
+30. As a user, I want domain sorting to be continuous without extra section headers so Tab Eagle stays simple.
+
+31. As a user, I want domain-sorted cards to use colors derived from each domain's favicon so sites are easier to scan visually.
+
+32. As a user, I want tab cards to show when a tab was last accessed in human-readable age format so I can find tabs I have not used recently.
+
+33. As a user, I want age-sorted cards to show a subtle blue tint when used in the last 5 minutes, stay neutral until 1 hour, and become progressively warmer after 1 hour, 6 hours, 1 day, 3 days, and 1 week so neglected tabs stand out without adding extra labels.
+
+34. As a user, I want to add any normal web tab to Chrome's Reading List from its tab card so I can save it for later before closing or switching away.
+
+35. As a user, I want pinned tabs to show their pinned state instead of a Reading List action so mutually exclusive card actions do not shift the card shape.
+
+36. As a user, I want the extension to avoid requesting access to all site data so I can trust that it is only managing tabs, not reading page contents.
+
+37. As a user, I want Tab Eagle to avoid sending my tab data to any developer-operated server so my tab overview stays local in Chrome.
 
 ## Upcoming
 

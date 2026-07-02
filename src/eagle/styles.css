@@ -190,6 +190,13 @@ h1 {
   box-shadow: var(--md-sys-elevation-level1);
 }
 
+.tab-card.is-selected {
+  border-color: var(--md-sys-color-primary);
+  box-shadow:
+    0 0 0 2px var(--md-sys-color-primary-container),
+    var(--md-sys-elevation-level1);
+}
+
 .tab-card.is-domain-colored {
   background: var(--domain-card-container);
   border-color: var(--domain-card-outline);
@@ -201,6 +208,13 @@ h1 {
   border-color: var(--domain-card-primary);
 }
 
+.tab-card.is-domain-colored.is-selected {
+  border-color: var(--domain-card-primary);
+  box-shadow:
+    0 0 0 2px var(--domain-card-primary),
+    var(--md-sys-elevation-level1);
+}
+
 .tab-card.is-age-colored {
   background: var(--age-card-container);
   border-color: var(--age-card-outline);
@@ -210,6 +224,13 @@ h1 {
 .tab-card.is-age-colored:hover {
   background: var(--age-card-container);
   border-color: var(--age-card-primary);
+}
+
+.tab-card.is-age-colored.is-selected {
+  border-color: var(--age-card-primary);
+  box-shadow:
+    0 0 0 2px var(--age-card-primary),
+    var(--md-sys-elevation-level1);
 }
 
 .tab-card:active {

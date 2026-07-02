@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Tab Eagle",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "A bird's-eye view of your Chrome tabs.",
   "icons": {
     "16": "icons/icon16.png",

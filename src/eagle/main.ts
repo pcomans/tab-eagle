@@ -13,6 +13,11 @@ import { getEagleBaseUrl, isEagleUrl } from '../shared/urls';
 import { ageBucketForLastAccessed, colorsForAgeBucket, isAgeSortMode } from './age-colors';
 import { colorsFromImage, faviconUrlForPageUrl, loadImage, type DomainCardColors } from './domain-colors';
 import { closeIconSvg, readingListIconSvg, statusIconSvg } from './icons';
+import {
+  nextSelectedTabId,
+  reconcileSelectedTabId,
+  type SearchNavigationKey
+} from './search-selection';
 import { filterTabsBySearch, nextSortMode, sortTabs, toManagedTab, toReadingListUrl } from './tab-model';
 
 const SORT_STORAGE_KEY = 'sortMode';
@@ -26,6 +31,7 @@ let refreshTimer: number | undefined;
 let closeReserveSlots = 0;
 let closeReserveTimer: number | undefined;
 let isPointerInsideGrid = false;
+let selectedTabId: number | undefined;
 let readingListUrls = new Set<string>();
 let readingListPendingTabIds = new Set<number>();
 const domainColorCache = new Map<string, DomainCardColors | null>();
@@ -94,8 +100,7 @@ function bindEvents(): void {
   });
 
   searchInput.addEventListener('input', () => {
-    searchQuery = searchInput.value;
-    render();
+    setSearchQuery(searchInput.value);
   });
 
   grid.addEventListener('pointerenter', () => {
@@ -120,21 +125,18 @@ function bindEvents(): void {
       return;
     }
 
-    if (event.key === 'Enter' && document.activeElement?.classList.contains('tab-card')) {
+    if (event.key === 'Enter' && !isCommandTarget(event.target)) {
       event.preventDefault();
-      const tabId = Number((document.activeElement as HTMLElement).dataset.tabId);
-      if (Number.isInteger(tabId)) {
-        void openTab(tabId);
+      if (typeof selectedTabId === 'number') {
+        void openTab(selectedTabId);
       }
       return;
     }
 
-    if (['ArrowRight', 'ArrowDown', 'ArrowLeft', 'ArrowUp'].includes(event.key)) {
-      const activeCard = document.activeElement?.classList.contains('tab-card');
-      if (activeCard) {
-        event.preventDefault();
-        moveSelection(event.key === 'ArrowRight' || event.key === 'ArrowDown' ? 1 : -1);
-      }
+    if (isSearchNavigationKey(event.key) && !isCommandTarget(event.target)) {
+      event.preventDefault();
+      moveSelection(event.key);
+      return;
     }
 
     if (isSearchKeystroke(event)) {
@@ -301,12 +303,13 @@ function isSortMode(value: unknown): value is SortMode {
 
 function render(): void {
   const visibleTabs = filterTabsBySearch(orderedTabs, searchQuery);
+  selectedTabId = reconcileSelectedTabId(visibleTabs, selectedTabId);
 
   grid.replaceChildren();
   tabCount.textContent = countLabel(visibleTabs.length, orderedTabs.length);
   returnOriginButton.toggleAttribute('disabled', !state.originTabId);
 
-  if (orderedTabs.length === 0 && closeReserveSlots === 0) {
+  if (orderedTabs.length === 0) {
     const empty = document.createElement('div');
     empty.className = 'empty-state';
     empty.innerHTML = `
@@ -321,7 +324,7 @@ function render(): void {
     return;
   }
 
-  if (visibleTabs.length === 0 && closeReserveSlots === 0) {
+  if (visibleTabs.length === 0) {
     const empty = document.createElement('div');
     empty.className = 'empty-state';
     empty.innerHTML = `
@@ -354,6 +357,7 @@ function createTabCard(tab: ManagedTab): HTMLElement {
   const card = document.createElement('article');
   const origin = tab.id === state.originTabId;
   const pending = state.pendingTabIds.has(tab.id);
+  const selected = tab.id === selectedTabId;
   const readingListUrl = toReadingListUrl(tab);
   const readingListPending = readingListPendingTabIds.has(tab.id);
   const isInReadingList = Boolean(readingListUrl && readingListUrls.has(readingListUrl));
@@ -369,6 +373,8 @@ function createTabCard(tab: ManagedTab): HTMLElement {
   card.dataset.tabId = String(tab.id);
   card.classList.toggle('is-origin', origin);
   card.classList.toggle('is-pending', pending);
+  card.classList.toggle('is-selected', selected);
+  card.setAttribute('aria-selected', String(selected));
   applyDomainCardColors(card, tab);
   applyAgeCardColors(card, tab);
 
@@ -401,7 +407,12 @@ function createTabCard(tab: ManagedTab): HTMLElement {
   `;
 
   card.addEventListener('click', () => {
+    selectedTabId = tab.id;
     void openTab(tab.id);
+  });
+
+  card.addEventListener('focus', () => {
+    selectTabCard(tab.id);
   });
 
   card.querySelector<HTMLElement>('.close-button')?.addEventListener('click', (event) => {
@@ -575,22 +586,53 @@ function formatLastAccessed(lastAccessed: number | undefined, now = Date.now()):
   return `Last used ${elapsedYears}y ago`;
 }
 
-function moveSelection(delta: number): void {
+function moveSelection(key: SearchNavigationKey): void {
   const visibleTabs = filterTabsBySearch(orderedTabs, searchQuery);
   if (visibleTabs.length === 0) return;
 
-  const activeTabId = Number((document.activeElement as HTMLElement | null)?.dataset.tabId);
-  const currentIndex = visibleTabs.findIndex((tab) => tab.id === activeTabId);
-  const nextIndex = Math.min(Math.max((currentIndex < 0 ? 0 : currentIndex) + delta, 0), visibleTabs.length - 1);
-  const nextTabId = visibleTabs[nextIndex]?.id;
-  const nextCard = grid.querySelector<HTMLElement>(`.tab-card[data-tab-id="${nextTabId}"]`);
-  nextCard?.focus();
+  const nextTabId = nextSelectedTabId(visibleTabs, selectedTabId, key, gridColumnCount());
+  if (typeof nextTabId !== 'number' || nextTabId === selectedTabId) return;
+
+  selectedTabId = nextTabId;
+  render();
+  scrollSelectedCardIntoView();
 }
 
 function setSearchQuery(query: string): void {
   searchQuery = query;
   searchInput.value = query;
+  selectedTabId = reconcileSelectedTabId(filterTabsBySearch(orderedTabs, searchQuery), selectedTabId, {
+    resetToFirst: true
+  });
   render();
+}
+
+function selectTabCard(tabId: number): void {
+  if (selectedTabId === tabId) return;
+  selectedTabId = tabId;
+  updateSelectedCardAttributes();
+}
+
+function updateSelectedCardAttributes(): void {
+  grid.querySelectorAll<HTMLElement>('.tab-card').forEach((card) => {
+    const selected = Number(card.dataset.tabId) === selectedTabId;
+    card.classList.toggle('is-selected', selected);
+    card.setAttribute('aria-selected', String(selected));
+  });
+}
+
+function scrollSelectedCardIntoView(): void {
+  window.requestAnimationFrame(() => {
+    grid
+      .querySelector<HTMLElement>(`.tab-card[data-tab-id="${selectedTabId}"]`)
+      ?.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+  });
+}
+
+function gridColumnCount(): number {
+  const columns = window.getComputedStyle(grid).gridTemplateColumns.trim();
+  if (!columns || columns === 'none') return 1;
+  return columns.split(/\s+/).length;
 }
 
 function focusSearchInput(): void {
@@ -607,6 +649,10 @@ function isSearchKeystroke(event: KeyboardEvent): boolean {
   return event.key.length === 1 && !event.metaKey && !event.ctrlKey && !event.altKey && !isEditableTarget(event.target);
 }
 
+function isSearchNavigationKey(key: string): key is SearchNavigationKey {
+  return key === 'ArrowLeft' || key === 'ArrowRight' || key === 'ArrowUp' || key === 'ArrowDown';
+}
+
 function isEditableTarget(target: EventTarget | null): boolean {
   if (!(target instanceof HTMLElement)) return false;
 
@@ -616,6 +662,17 @@ function isEditableTarget(target: EventTarget | null): boolean {
     target instanceof HTMLTextAreaElement ||
     target.isContentEditable ||
     target.tagName.toLowerCase().includes('text-field')
+  );
+}
+
+function isCommandTarget(target: EventTarget | null): boolean {
+  if (!(target instanceof HTMLElement)) return false;
+  if (target === searchInput) return false;
+
+  return Boolean(
+    target.closest(
+      'button, md-icon-button, md-text-button, md-outlined-button, md-filled-button, md-outlined-segmented-button'
+    )
   );
 }
 
