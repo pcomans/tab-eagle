@@ -49,7 +49,7 @@ const cards = Array.from({ length: 15 }, (_, index) => {
 
 function previewHtml(colorScheme) {
   return `<!doctype html>
-<html data-color-scheme="${colorScheme}">
+<html data-color-scheme="${colorScheme}" style="--tab-eagle-sky-depth: 790px;">
   <head>
     <meta charset="utf-8" />
     <style>${css}</style>

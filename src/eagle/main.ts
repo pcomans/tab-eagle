@@ -22,6 +22,9 @@ import { filterTabsBySearch, nextSortMode, sortTabs, toManagedTab, toReadingList
 
 const SORT_STORAGE_KEY = 'sortMode';
 const CLOSE_RESERVE_TIMEOUT_MS = 1800;
+const MIN_SKY_DEPTH_PX = 430;
+const MAX_SKY_DEPTH_PX = 1200;
+const SKY_DEPTH_PER_TAB_PX = 24;
 
 let state: EagleState;
 let managedTabs: ManagedTab[] = [];
@@ -312,6 +315,7 @@ function render(): void {
   const visibleTabs = filterTabsBySearch(orderedTabs, searchQuery);
   selectedTabId = reconcileSelectedTabId(visibleTabs, selectedTabId);
 
+  updateSkyDepth(orderedTabs.length);
   grid.replaceChildren();
   tabCount.textContent = countLabel(visibleTabs.length, orderedTabs.length);
   returnOriginButton.toggleAttribute('disabled', !state.originTabId);
@@ -358,6 +362,11 @@ function render(): void {
   for (let index = 0; index < closeReserveSlots; index += 1) {
     grid.append(createGridReserveSlot());
   }
+}
+
+function updateSkyDepth(tabTotal: number): void {
+  const skyDepth = Math.min(MAX_SKY_DEPTH_PX, MIN_SKY_DEPTH_PX + tabTotal * SKY_DEPTH_PER_TAB_PX);
+  document.documentElement.style.setProperty('--tab-eagle-sky-depth', `${skyDepth}px`);
 }
 
 function createTabCard(tab: ManagedTab): HTMLElement {

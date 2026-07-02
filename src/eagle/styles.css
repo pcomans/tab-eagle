@@ -20,6 +20,7 @@
   --md-sys-color-outline-variant: #c0c7cf;
   --tab-eagle-sky: #dff3ff;
   --tab-eagle-sky-horizon: var(--md-sys-color-surface);
+  --tab-eagle-sky-depth: 430px;
   --tab-eagle-cloud: var(--md-sys-color-surface);
   --tab-eagle-cloud-shadow: var(--md-sys-color-surface-container-high);
   --md-sys-shape-corner-small: 4px;
@@ -98,7 +99,7 @@ body {
   min-width: 320px;
   min-height: 100vh;
   background:
-    linear-gradient(180deg, var(--tab-eagle-sky) 0%, var(--tab-eagle-sky-horizon) 360px),
+    linear-gradient(180deg, var(--tab-eagle-sky) 0%, var(--tab-eagle-sky-horizon) var(--tab-eagle-sky-depth)),
     var(--md-sys-color-surface);
   overflow-x: hidden;
 }
@@ -122,7 +123,7 @@ button {
   overflow: hidden;
   background:
     radial-gradient(circle at 22% 12%, color-mix(in srgb, var(--md-sys-color-primary-container) 36%, transparent), transparent 24%),
-    linear-gradient(180deg, var(--tab-eagle-sky) 0%, var(--tab-eagle-sky-horizon) 430px);
+    linear-gradient(180deg, var(--tab-eagle-sky) 0%, var(--tab-eagle-sky-horizon) var(--tab-eagle-sky-depth));
 }
 
 .cloud {
