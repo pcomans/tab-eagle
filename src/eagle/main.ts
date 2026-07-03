@@ -331,6 +331,7 @@ function render(): void {
   grid.replaceChildren();
   tabCount.textContent = countLabel(visibleTabs.length, orderedTabs.length);
   returnOriginButton.toggleAttribute('disabled', !state.originTabId);
+  returnOriginButton.toggleAttribute('hidden', !state.originTabId);
 
   if (orderedTabs.length === 0) {
     const empty = document.createElement('div');
