@@ -18,14 +18,16 @@
   --md-sys-color-surface-container-highest: #e2e5e9;
   --md-sys-color-outline: #70787f;
   --md-sys-color-outline-variant: #c0c7cf;
-  --tab-eagle-sky-zenith: color-mix(in srgb, var(--md-sys-color-primary) 12%, var(--md-sys-color-primary-container));
-  --tab-eagle-sky-mid: color-mix(in srgb, var(--md-sys-color-primary-container) 52%, var(--md-sys-color-surface));
-  --tab-eagle-sky-haze: color-mix(in srgb, #ffe7c4 24%, var(--md-sys-color-surface));
+  --tab-eagle-sky-zenith: color-mix(in srgb, var(--md-sys-color-primary) 20%, var(--md-sys-color-primary-container));
+  --tab-eagle-sky-mid: color-mix(in srgb, var(--md-sys-color-primary-container) 58%, var(--md-sys-color-surface));
+  --tab-eagle-sky-haze: color-mix(in srgb, #ffe7c4 26%, var(--md-sys-color-surface));
   --tab-eagle-sky-horizon: var(--md-sys-color-surface);
   --tab-eagle-sky-depth: 430px;
-  --tab-eagle-sky-glow: color-mix(in srgb, #ffffff 65%, transparent);
-  --tab-eagle-haze: color-mix(in srgb, #ffffff 85%, transparent);
-  --tab-eagle-haze-opacity: 0.55;
+  --tab-eagle-sky-glow: color-mix(in srgb, #ffffff 72%, transparent);
+  --tab-eagle-wisp: color-mix(in srgb, #ffffff 70%, transparent);
+  --tab-eagle-wisp-soft: color-mix(in srgb, #ffffff 45%, transparent);
+  --tab-eagle-horizon-glow: color-mix(in srgb, #fff3de 75%, transparent);
+  --tab-eagle-grain-opacity: 0.05;
   --md-sys-shape-corner-small: 4px;
   --md-sys-shape-corner-medium: 6px;
   --md-sys-shape-corner-large: 8px;
@@ -54,13 +56,15 @@
     --md-sys-color-surface-container-highest: #32353a;
     --md-sys-color-outline: #8a9299;
     --md-sys-color-outline-variant: #40484f;
-    --tab-eagle-sky-zenith: color-mix(in srgb, var(--md-sys-color-primary-container) 42%, var(--md-sys-color-surface));
-    --tab-eagle-sky-mid: color-mix(in srgb, var(--md-sys-color-primary-container) 20%, var(--md-sys-color-surface));
-    --tab-eagle-sky-haze: color-mix(in srgb, #ffb26b 7%, var(--md-sys-color-surface));
+    --tab-eagle-sky-zenith: color-mix(in srgb, var(--md-sys-color-primary-container) 48%, var(--md-sys-color-surface));
+    --tab-eagle-sky-mid: color-mix(in srgb, var(--md-sys-color-primary-container) 22%, var(--md-sys-color-surface));
+    --tab-eagle-sky-haze: color-mix(in srgb, #ffb26b 8%, var(--md-sys-color-surface));
     --tab-eagle-sky-horizon: var(--md-sys-color-surface);
-    --tab-eagle-sky-glow: color-mix(in srgb, var(--md-sys-color-primary) 15%, transparent);
-    --tab-eagle-haze: color-mix(in srgb, var(--md-sys-color-primary-container) 45%, transparent);
-    --tab-eagle-haze-opacity: 0.4;
+    --tab-eagle-sky-glow: color-mix(in srgb, var(--md-sys-color-primary) 18%, transparent);
+    --tab-eagle-wisp: color-mix(in srgb, var(--md-sys-color-primary-container) 38%, transparent);
+    --tab-eagle-wisp-soft: color-mix(in srgb, var(--md-sys-color-primary-container) 24%, transparent);
+    --tab-eagle-horizon-glow: color-mix(in srgb, #ffb26b 9%, transparent);
+    --tab-eagle-grain-opacity: 0.08;
     --md-sys-elevation-level1: 0 1px 2px rgba(0, 0, 0, 0.32), 0 1px 3px 1px rgba(0, 0, 0, 0.24);
     --md-sys-elevation-level2: 0 1px 2px rgba(0, 0, 0, 0.36), 0 2px 6px 2px rgba(0, 0, 0, 0.28);
   }
@@ -88,13 +92,15 @@
   --md-sys-color-surface-container-highest: #32353a;
   --md-sys-color-outline: #8a9299;
   --md-sys-color-outline-variant: #40484f;
-  --tab-eagle-sky-zenith: color-mix(in srgb, var(--md-sys-color-primary-container) 42%, var(--md-sys-color-surface));
-  --tab-eagle-sky-mid: color-mix(in srgb, var(--md-sys-color-primary-container) 20%, var(--md-sys-color-surface));
-  --tab-eagle-sky-haze: color-mix(in srgb, #ffb26b 7%, var(--md-sys-color-surface));
+  --tab-eagle-sky-zenith: color-mix(in srgb, var(--md-sys-color-primary-container) 48%, var(--md-sys-color-surface));
+  --tab-eagle-sky-mid: color-mix(in srgb, var(--md-sys-color-primary-container) 22%, var(--md-sys-color-surface));
+  --tab-eagle-sky-haze: color-mix(in srgb, #ffb26b 8%, var(--md-sys-color-surface));
   --tab-eagle-sky-horizon: var(--md-sys-color-surface);
-  --tab-eagle-sky-glow: color-mix(in srgb, var(--md-sys-color-primary) 15%, transparent);
-  --tab-eagle-haze: color-mix(in srgb, var(--md-sys-color-primary-container) 45%, transparent);
-  --tab-eagle-haze-opacity: 0.4;
+  --tab-eagle-sky-glow: color-mix(in srgb, var(--md-sys-color-primary) 18%, transparent);
+  --tab-eagle-wisp: color-mix(in srgb, var(--md-sys-color-primary-container) 38%, transparent);
+  --tab-eagle-wisp-soft: color-mix(in srgb, var(--md-sys-color-primary-container) 24%, transparent);
+  --tab-eagle-horizon-glow: color-mix(in srgb, #ffb26b 9%, transparent);
+  --tab-eagle-grain-opacity: 0.08;
   --md-sys-elevation-level1: 0 1px 2px rgba(0, 0, 0, 0.32), 0 1px 3px 1px rgba(0, 0, 0, 0.24);
   --md-sys-elevation-level2: 0 1px 2px rgba(0, 0, 0, 0.36), 0 2px 6px 2px rgba(0, 0, 0, 0.28);
 }
@@ -129,40 +135,29 @@ button {
   pointer-events: none;
   overflow: hidden;
   background:
-    radial-gradient(ellipse 140% 70% at 25% -20%, var(--tab-eagle-sky-glow), transparent 55%),
+    radial-gradient(ellipse 130% 60% at 24% -18%, var(--tab-eagle-sky-glow), transparent 58%),
+    radial-gradient(ellipse 52% 5% at 24% calc(var(--tab-eagle-sky-depth) * 0.2), var(--tab-eagle-wisp), transparent 72%),
+    radial-gradient(ellipse 40% 4% at 74% calc(var(--tab-eagle-sky-depth) * 0.32), var(--tab-eagle-wisp-soft), transparent 74%),
+    radial-gradient(ellipse 64% 6% at 44% calc(var(--tab-eagle-sky-depth) * 0.56), var(--tab-eagle-wisp-soft), transparent 76%),
+    radial-gradient(ellipse 34% 3% at 60% calc(var(--tab-eagle-sky-depth) * 0.72), var(--tab-eagle-wisp-soft), transparent 74%),
+    radial-gradient(ellipse 130% 24% at 50% var(--tab-eagle-sky-depth), var(--tab-eagle-horizon-glow), transparent 68%),
     linear-gradient(
       to bottom in oklab,
       var(--tab-eagle-sky-zenith),
-      var(--tab-eagle-sky-mid) calc(var(--tab-eagle-sky-depth) * 0.45),
-      var(--tab-eagle-sky-haze) calc(var(--tab-eagle-sky-depth) * 0.85),
+      var(--tab-eagle-sky-mid) calc(var(--tab-eagle-sky-depth) * 0.48),
+      var(--tab-eagle-sky-haze) calc(var(--tab-eagle-sky-depth) * 0.88),
       var(--tab-eagle-sky-horizon) var(--tab-eagle-sky-depth)
     );
 }
 
-.sky-background::before,
 .sky-background::after {
   content: "";
   position: absolute;
-  border-radius: 50%;
-  background: var(--tab-eagle-haze);
-  opacity: var(--tab-eagle-haze-opacity);
-}
-
-.sky-background::before {
-  top: calc(var(--tab-eagle-sky-depth) * 0.26);
-  left: -12vw;
-  width: 64vw;
-  height: 22vh;
-  filter: blur(72px);
-}
-
-.sky-background::after {
-  top: calc(var(--tab-eagle-sky-depth) * 0.52);
-  right: -14vw;
-  width: 72vw;
-  height: 24vh;
-  filter: blur(88px);
-  opacity: calc(var(--tab-eagle-haze-opacity) * 0.75);
+  inset: 0;
+  background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="240" height="240"><filter id="n"><feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="2" stitchTiles="stitch"/><feColorMatrix type="saturate" values="0"/></filter><rect width="240" height="240" filter="url(%23n)"/></svg>');
+  background-size: 240px 240px;
+  mix-blend-mode: soft-light;
+  opacity: var(--tab-eagle-grain-opacity);
 }
 
 .top-bar {
