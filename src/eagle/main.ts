@@ -18,13 +18,13 @@ import {
   reconcileSelectedTabId,
   type SearchNavigationKey
 } from './search-selection';
+import { createSkyUpdater } from './sky/sky-render';
+import { effectiveThemeMode } from './sky/sky-state';
 import { filterTabsBySearch, nextSortMode, sortTabs, toManagedTab, toReadingListUrl } from './tab-model';
 
 const SORT_STORAGE_KEY = 'sortMode';
 const CLOSE_RESERVE_TIMEOUT_MS = 1800;
-const MIN_SKY_DEPTH_PX = 430;
-const MAX_SKY_DEPTH_PX = 1200;
-const SKY_DEPTH_PER_TAB_PX = 24;
+const SKY_CLOCK_TICK_MS = 60_000;
 
 let state: EagleState;
 let managedTabs: ManagedTab[] = [];
@@ -42,6 +42,20 @@ const domainColorRequests = new Set<string>();
 const colorSchemeQuery = window.matchMedia('(prefers-color-scheme: dark)');
 
 const grid = requiredElement<HTMLDivElement>('#tab-grid');
+const skyUpdate = createSkyUpdater(
+  requiredElement<HTMLCanvasElement>('.sky-canvas'),
+  requiredElement<HTMLCanvasElement>('.star-canvas'),
+  {
+    getThemeMode: () => currentThemeMode(),
+    onThemeModeChange: () => {
+      // domain/age card colors are theme-dependent; recompute them when the
+      // sky crosses the day/night boundary
+      domainColorCache.clear();
+      domainColorRequests.clear();
+      render();
+    }
+  }
+);
 const tabCount = requiredElement<HTMLParagraphElement>('#tab-count');
 const statusEl = requiredElement<HTMLDivElement>('#status');
 const returnOriginButton = requiredElement<HTMLElement>('#return-origin');
@@ -221,6 +235,18 @@ function bindEvents(): void {
     render();
   });
 
+  window.setInterval(() => {
+    skyUpdate(orderedTabs.length);
+  }, SKY_CLOCK_TICK_MS);
+
+  let skyResizeTimer: number | undefined;
+  window.addEventListener('resize', () => {
+    window.clearTimeout(skyResizeTimer);
+    skyResizeTimer = window.setTimeout(() => {
+      skyUpdate(orderedTabs.length);
+    }, 150);
+  });
+
   if (chrome.readingList) {
     chrome.readingList.onEntryAdded.addListener((entry) => {
       readingListUrls.add(entry.url);
@@ -315,7 +341,7 @@ function render(): void {
   const visibleTabs = filterTabsBySearch(orderedTabs, searchQuery);
   selectedTabId = reconcileSelectedTabId(visibleTabs, selectedTabId);
 
-  updateSkyDepth(orderedTabs.length);
+  skyUpdate(orderedTabs.length);
   grid.replaceChildren();
   tabCount.textContent = countLabel(visibleTabs.length, orderedTabs.length);
   returnOriginButton.toggleAttribute('disabled', !state.originTabId);
@@ -362,11 +388,6 @@ function render(): void {
   for (let index = 0; index < closeReserveSlots; index += 1) {
     grid.append(createGridReserveSlot());
   }
-}
-
-function updateSkyDepth(tabTotal: number): void {
-  const skyDepth = Math.min(MAX_SKY_DEPTH_PX, MIN_SKY_DEPTH_PX + tabTotal * SKY_DEPTH_PER_TAB_PX);
-  document.documentElement.style.setProperty('--tab-eagle-sky-depth', `${skyDepth}px`);
 }
 
 function createTabCard(tab: ManagedTab): HTMLElement {
@@ -501,7 +522,7 @@ async function ensureDomainColor(tab: ManagedTab): Promise<void> {
 }
 
 function currentThemeMode(): ThemeMode {
-  return colorSchemeQuery.matches ? 'dark' : 'light';
+  return effectiveThemeMode(colorSchemeQuery.matches, new Date().getHours() + new Date().getMinutes() / 60);
 }
 
 function domainColorCacheKey(domain: string): string {

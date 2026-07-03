@@ -18,11 +18,6 @@
   --md-sys-color-surface-container-highest: #e2e5e9;
   --md-sys-color-outline: #70787f;
   --md-sys-color-outline-variant: #c0c7cf;
-  --tab-eagle-sky: #dff3ff;
-  --tab-eagle-sky-horizon: var(--md-sys-color-surface);
-  --tab-eagle-sky-depth: 430px;
-  --tab-eagle-cloud: var(--md-sys-color-surface);
-  --tab-eagle-cloud-shadow: var(--md-sys-color-surface-container-high);
   --md-sys-shape-corner-small: 4px;
   --md-sys-shape-corner-medium: 6px;
   --md-sys-shape-corner-large: 8px;
@@ -51,10 +46,6 @@
     --md-sys-color-surface-container-highest: #32353a;
     --md-sys-color-outline: #8a9299;
     --md-sys-color-outline-variant: #40484f;
-    --tab-eagle-sky: #0c2332;
-    --tab-eagle-sky-horizon: var(--md-sys-color-surface);
-    --tab-eagle-cloud: var(--md-sys-color-surface-container-highest);
-    --tab-eagle-cloud-shadow: var(--md-sys-color-surface-container);
     --md-sys-elevation-level1: 0 1px 2px rgba(0, 0, 0, 0.32), 0 1px 3px 1px rgba(0, 0, 0, 0.24);
     --md-sys-elevation-level2: 0 1px 2px rgba(0, 0, 0, 0.36), 0 2px 6px 2px rgba(0, 0, 0, 0.28);
   }
@@ -82,10 +73,6 @@
   --md-sys-color-surface-container-highest: #32353a;
   --md-sys-color-outline: #8a9299;
   --md-sys-color-outline-variant: #40484f;
-  --tab-eagle-sky: #0c2332;
-  --tab-eagle-sky-horizon: var(--md-sys-color-surface);
-  --tab-eagle-cloud: var(--md-sys-color-surface-container-highest);
-  --tab-eagle-cloud-shadow: var(--md-sys-color-surface-container);
   --md-sys-elevation-level1: 0 1px 2px rgba(0, 0, 0, 0.32), 0 1px 3px 1px rgba(0, 0, 0, 0.24);
   --md-sys-elevation-level2: 0 1px 2px rgba(0, 0, 0, 0.36), 0 2px 6px 2px rgba(0, 0, 0, 0.28);
 }
@@ -98,9 +85,7 @@ body {
   margin: 0;
   min-width: 320px;
   min-height: 100vh;
-  background:
-    linear-gradient(180deg, var(--tab-eagle-sky) 0%, var(--tab-eagle-sky-horizon) var(--tab-eagle-sky-depth)),
-    var(--md-sys-color-surface);
+  background: var(--md-sys-color-surface);
   overflow-x: hidden;
 }
 
@@ -121,88 +106,23 @@ button {
   z-index: 0;
   pointer-events: none;
   overflow: hidden;
-  background:
-    radial-gradient(circle at 22% 12%, color-mix(in srgb, var(--md-sys-color-primary-container) 36%, transparent), transparent 24%),
-    linear-gradient(180deg, var(--tab-eagle-sky) 0%, var(--tab-eagle-sky-horizon) var(--tab-eagle-sky-depth));
 }
 
-.cloud {
+.sky-canvas {
+  /* oversized and blurred so the low-res noise render reads as mist */
   position: absolute;
-  display: block;
-  width: var(--cloud-width);
-  height: var(--cloud-height);
-  border-radius: 999px;
-  background: color-mix(in srgb, var(--tab-eagle-cloud) 92%, transparent);
-  border: 1px solid color-mix(in srgb, var(--tab-eagle-cloud-shadow) 76%, transparent);
-  opacity: var(--cloud-opacity);
-  filter: blur(0.2px);
-  animation: cloud-drift var(--cloud-duration) ease-in-out infinite alternate;
+  inset: -2%;
+  width: 104%;
+  height: 104%;
+  filter: blur(3px);
 }
 
-.cloud::before,
-.cloud::after {
-  content: "";
+.star-canvas {
+  /* full-resolution and unblurred: stars must stay crisp points */
   position: absolute;
-  bottom: 28%;
-  border-radius: 50%;
-  background: color-mix(in srgb, var(--tab-eagle-cloud) 94%, transparent);
-}
-
-.cloud::before {
-  left: 18%;
-  width: 34%;
-  height: 86%;
-}
-
-.cloud::after {
-  right: 16%;
-  width: 42%;
-  height: 112%;
-}
-
-.cloud-one {
-  --cloud-width: 260px;
-  --cloud-height: 72px;
-  --cloud-opacity: 0.9;
-  --cloud-duration: 18s;
-  top: 94px;
-  left: max(32px, calc((100vw - 1440px) / 2 + 252px));
-}
-
-.cloud-two {
-  --cloud-width: 300px;
-  --cloud-height: 82px;
-  --cloud-opacity: 0.62;
-  --cloud-duration: 24s;
-  top: 420px;
-  right: max(40px, calc((100vw - 1440px) / 2 + 24px));
-  animation-delay: -8s;
-}
-
-.cloud-three {
-  --cloud-width: 180px;
-  --cloud-height: 54px;
-  --cloud-opacity: 0.54;
-  --cloud-duration: 21s;
-  top: 68vh;
-  left: max(28px, calc((100vw - 1440px) / 2 + 180px));
-  animation-delay: -14s;
-}
-
-@keyframes cloud-drift {
-  from {
-    transform: translate3d(-8px, 0, 0);
-  }
-
-  to {
-    transform: translate3d(10px, -4px, 0);
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .cloud {
-    animation: none;
-  }
+  inset: 0;
+  width: 100%;
+  height: 100%;
 }
 
 .top-bar {
