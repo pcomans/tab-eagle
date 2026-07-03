@@ -545,11 +545,12 @@ function bindFaviconFallback(card: HTMLElement): void {
 }
 
 function readingListButton(tab: ManagedTab, label: string, enabled: boolean): string {
-  const ariaLabel = label === 'Read later' ? `Add to Reading List: ${tab.title}` : `${label}: ${tab.title}`;
+  const isIdle = label === 'Read later';
+  const ariaLabel = isIdle ? `Add to Reading List: ${tab.title}` : `${label}: ${tab.title}`;
 
   return `
     <md-text-button
-      class="reading-list-button"
+      class="reading-list-button${isIdle ? ' is-idle' : ''}"
       type="button"
       aria-label="${escapeAttribute(ariaLabel)}"
       ${enabled ? '' : 'disabled'}

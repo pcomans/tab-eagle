@@ -23,9 +23,10 @@
   --tab-eagle-sky-horizon: var(--md-sys-color-surface);
   --tab-eagle-sky-depth: 430px;
   --tab-eagle-stars: none;
-  --tab-eagle-cloud-a: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 260 150"><defs><g id="s"><circle cx="150" cy="64" r="46"/><circle cx="96" cy="84" r="34"/><circle cx="56" cy="100" r="24"/><circle cx="204" cy="92" r="28"/><rect x="32" y="96" width="204" height="34" rx="17"/></g><clipPath id="c"><circle cx="150" cy="64" r="46"/><circle cx="96" cy="84" r="34"/><circle cx="56" cy="100" r="24"/><circle cx="204" cy="92" r="28"/><rect x="32" y="96" width="204" height="34" rx="17"/></clipPath></defs><use href="%23s" fill="%2330241e" stroke="%2330241e" stroke-width="5" stroke-linejoin="round"/><g clip-path="url(%23c)"><use href="%23s" fill="%23d3e4f2"/><use href="%23s" fill="%23ffffff" transform="translate(-9,-11)"/></g></svg>');
-  --tab-eagle-cloud-b: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 120"><defs><g id="s"><circle cx="76" cy="52" r="36"/><circle cx="124" cy="68" r="28"/><circle cx="160" cy="82" r="18"/><rect x="26" y="72" width="152" height="28" rx="14"/></g><clipPath id="c"><circle cx="76" cy="52" r="36"/><circle cx="124" cy="68" r="28"/><circle cx="160" cy="82" r="18"/><rect x="26" y="72" width="152" height="28" rx="14"/></clipPath></defs><use href="%23s" fill="%2330241e" stroke="%2330241e" stroke-width="5" stroke-linejoin="round"/><g clip-path="url(%23c)"><use href="%23s" fill="%23d3e4f2"/><use href="%23s" fill="%23ffffff" transform="translate(-8,-9)"/></g></svg>');
-  --tab-eagle-cloud-c: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 100"><defs><g id="s"><circle cx="62" cy="50" r="26"/><circle cx="104" cy="42" r="30"/><rect x="30" y="56" width="104" height="24" rx="12"/></g><clipPath id="c"><circle cx="62" cy="50" r="26"/><circle cx="104" cy="42" r="30"/><rect x="30" y="56" width="104" height="24" rx="12"/></clipPath></defs><use href="%23s" fill="%2330241e" stroke="%2330241e" stroke-width="5.5" stroke-linejoin="round"/><g clip-path="url(%23c)"><use href="%23s" fill="%23d3e4f2"/><use href="%23s" fill="%23ffffff" transform="translate(-6,-7)"/></g></svg>');
+  --tab-eagle-cloud-a: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 260 150"><defs><g id="s"><circle cx="150" cy="64" r="46"/><circle cx="96" cy="84" r="34"/><circle cx="56" cy="100" r="24"/><circle cx="204" cy="92" r="28"/><rect x="32" y="96" width="204" height="34" rx="17"/></g><clipPath id="c"><circle cx="150" cy="64" r="46"/><circle cx="96" cy="84" r="34"/><circle cx="56" cy="100" r="24"/><circle cx="204" cy="92" r="28"/><rect x="32" y="96" width="204" height="34" rx="17"/></clipPath></defs><use href="%23s" fill="%2330241e" stroke="%2330241e" stroke-width="5" stroke-linejoin="round"/><g clip-path="url(%23c)"><use href="%23s" fill="%23c3daed"/><use href="%23s" fill="%23ffffff" transform="translate(-12,-14)"/></g></svg>');
+  --tab-eagle-cloud-b: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 120"><defs><g id="s"><circle cx="76" cy="52" r="36"/><circle cx="124" cy="68" r="28"/><circle cx="160" cy="82" r="18"/><rect x="26" y="72" width="152" height="28" rx="14"/></g><clipPath id="c"><circle cx="76" cy="52" r="36"/><circle cx="124" cy="68" r="28"/><circle cx="160" cy="82" r="18"/><rect x="26" y="72" width="152" height="28" rx="14"/></clipPath></defs><use href="%23s" fill="%2330241e" stroke="%2330241e" stroke-width="5" stroke-linejoin="round"/><g clip-path="url(%23c)"><use href="%23s" fill="%23c3daed"/><use href="%23s" fill="%23ffffff" transform="translate(-11,-12)"/></g></svg>');
+  --tab-eagle-cloud-c: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 100"><defs><g id="s"><circle cx="62" cy="50" r="26"/><circle cx="104" cy="42" r="30"/><rect x="30" y="56" width="104" height="24" rx="12"/></g><clipPath id="c"><circle cx="62" cy="50" r="26"/><circle cx="104" cy="42" r="30"/><rect x="30" y="56" width="104" height="24" rx="12"/></clipPath></defs><use href="%23s" fill="%237d94a6" stroke="%237d94a6" stroke-width="5.5" stroke-linejoin="round"/><g clip-path="url(%23c)"><use href="%23s" fill="%23dcebf7"/><use href="%23s" fill="%23f4f9fd" transform="translate(-8,-9)"/></g></svg>');
+  --tab-eagle-cloud-d: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 150 95"><defs><g id="s"><circle cx="52" cy="44" r="28"/><circle cx="94" cy="52" r="20"/><rect x="24" y="54" width="96" height="22" rx="11"/></g><clipPath id="c"><circle cx="52" cy="44" r="28"/><circle cx="94" cy="52" r="20"/><rect x="24" y="54" width="96" height="22" rx="11"/></clipPath></defs><use href="%23s" fill="%237d94a6" stroke="%237d94a6" stroke-width="5.5" stroke-linejoin="round"/><g clip-path="url(%23c)"><use href="%23s" fill="%23dcebf7"/><use href="%23s" fill="%23f4f9fd" transform="translate(-8,-9)"/></g></svg>');
   --md-sys-shape-corner-small: 8px;
   --md-sys-shape-corner-medium: 12px;
   --md-sys-shape-corner-large: 16px;
@@ -57,9 +58,10 @@
     --tab-eagle-sky-zenith: color-mix(in srgb, var(--md-sys-color-primary-container) 48%, var(--md-sys-color-surface));
     --tab-eagle-sky-mid: color-mix(in srgb, var(--md-sys-color-primary-container) 22%, var(--md-sys-color-surface));
     --tab-eagle-stars: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 140"><defs><mask id="m"><rect width="600" height="140" fill="white"/><circle cx="531" cy="41" r="19" fill="black"/></mask></defs><circle cx="520" cy="48" r="21" fill="%23cfe3f2" mask="url(%23m)"/><path fill="%23cfe3f2" opacity="0.95" d="M236 22 L238.5 38 L236 54 L233.5 38 Z"/><path fill="%23cfe3f2" opacity="0.95" d="M220 38 L236 35.5 L252 38 L236 40.5 Z"/><circle cx="60" cy="84" r="2.5" fill="%23bcd9ee" opacity="0.9"/><circle cx="96" cy="52" r="1.6" fill="%23bcd9ee" opacity="0.7"/><circle cx="150" cy="70" r="2" fill="%23bcd9ee" opacity="0.8"/><circle cx="320" cy="90" r="1.8" fill="%23bcd9ee" opacity="0.65"/><circle cx="356" cy="30" r="2.4" fill="%23bcd9ee" opacity="0.85"/><circle cx="430" cy="64" r="1.5" fill="%23bcd9ee" opacity="0.6"/></svg>');
-    --tab-eagle-cloud-a: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 260 150"><defs><g id="s"><circle cx="150" cy="64" r="46"/><circle cx="96" cy="84" r="34"/><circle cx="56" cy="100" r="24"/><circle cx="204" cy="92" r="28"/><rect x="32" y="96" width="204" height="34" rx="17"/></g><clipPath id="c"><circle cx="150" cy="64" r="46"/><circle cx="96" cy="84" r="34"/><circle cx="56" cy="100" r="24"/><circle cx="204" cy="92" r="28"/><rect x="32" y="96" width="204" height="34" rx="17"/></clipPath></defs><use href="%23s" fill="%2355809f" stroke="%2355809f" stroke-width="5" stroke-linejoin="round"/><g clip-path="url(%23c)"><use href="%23s" fill="%231b2d3c"/><use href="%23s" fill="%23253a4d" transform="translate(-9,-11)"/></g></svg>');
-    --tab-eagle-cloud-b: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 120"><defs><g id="s"><circle cx="76" cy="52" r="36"/><circle cx="124" cy="68" r="28"/><circle cx="160" cy="82" r="18"/><rect x="26" y="72" width="152" height="28" rx="14"/></g><clipPath id="c"><circle cx="76" cy="52" r="36"/><circle cx="124" cy="68" r="28"/><circle cx="160" cy="82" r="18"/><rect x="26" y="72" width="152" height="28" rx="14"/></clipPath></defs><use href="%23s" fill="%2355809f" stroke="%2355809f" stroke-width="5" stroke-linejoin="round"/><g clip-path="url(%23c)"><use href="%23s" fill="%231b2d3c"/><use href="%23s" fill="%23253a4d" transform="translate(-8,-9)"/></g></svg>');
-    --tab-eagle-cloud-c: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 100"><defs><g id="s"><circle cx="62" cy="50" r="26"/><circle cx="104" cy="42" r="30"/><rect x="30" y="56" width="104" height="24" rx="12"/></g><clipPath id="c"><circle cx="62" cy="50" r="26"/><circle cx="104" cy="42" r="30"/><rect x="30" y="56" width="104" height="24" rx="12"/></clipPath></defs><use href="%23s" fill="%2355809f" stroke="%2355809f" stroke-width="5.5" stroke-linejoin="round"/><g clip-path="url(%23c)"><use href="%23s" fill="%231b2d3c"/><use href="%23s" fill="%23253a4d" transform="translate(-6,-7)"/></g></svg>');
+    --tab-eagle-cloud-a: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 260 150"><defs><g id="s"><circle cx="150" cy="64" r="46"/><circle cx="96" cy="84" r="34"/><circle cx="56" cy="100" r="24"/><circle cx="204" cy="92" r="28"/><rect x="32" y="96" width="204" height="34" rx="17"/></g><clipPath id="c"><circle cx="150" cy="64" r="46"/><circle cx="96" cy="84" r="34"/><circle cx="56" cy="100" r="24"/><circle cx="204" cy="92" r="28"/><rect x="32" y="96" width="204" height="34" rx="17"/></clipPath></defs><use href="%23s" fill="%2355809f" stroke="%2355809f" stroke-width="5" stroke-linejoin="round"/><g clip-path="url(%23c)"><use href="%23s" fill="%23192b3b"/><use href="%23s" fill="%23253a4d" transform="translate(-12,-14)"/></g></svg>');
+    --tab-eagle-cloud-b: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 120"><defs><g id="s"><circle cx="76" cy="52" r="36"/><circle cx="124" cy="68" r="28"/><circle cx="160" cy="82" r="18"/><rect x="26" y="72" width="152" height="28" rx="14"/></g><clipPath id="c"><circle cx="76" cy="52" r="36"/><circle cx="124" cy="68" r="28"/><circle cx="160" cy="82" r="18"/><rect x="26" y="72" width="152" height="28" rx="14"/></clipPath></defs><use href="%23s" fill="%2355809f" stroke="%2355809f" stroke-width="5" stroke-linejoin="round"/><g clip-path="url(%23c)"><use href="%23s" fill="%23192b3b"/><use href="%23s" fill="%23253a4d" transform="translate(-11,-12)"/></g></svg>');
+    --tab-eagle-cloud-c: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 100"><defs><g id="s"><circle cx="62" cy="50" r="26"/><circle cx="104" cy="42" r="30"/><rect x="30" y="56" width="104" height="24" rx="12"/></g><clipPath id="c"><circle cx="62" cy="50" r="26"/><circle cx="104" cy="42" r="30"/><rect x="30" y="56" width="104" height="24" rx="12"/></clipPath></defs><use href="%23s" fill="%233d5a73" stroke="%233d5a73" stroke-width="5.5" stroke-linejoin="round"/><g clip-path="url(%23c)"><use href="%23s" fill="%231a2937"/><use href="%23s" fill="%2320313f" transform="translate(-8,-9)"/></g></svg>');
+    --tab-eagle-cloud-d: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 150 95"><defs><g id="s"><circle cx="52" cy="44" r="28"/><circle cx="94" cy="52" r="20"/><rect x="24" y="54" width="96" height="22" rx="11"/></g><clipPath id="c"><circle cx="52" cy="44" r="28"/><circle cx="94" cy="52" r="20"/><rect x="24" y="54" width="96" height="22" rx="11"/></clipPath></defs><use href="%23s" fill="%233d5a73" stroke="%233d5a73" stroke-width="5.5" stroke-linejoin="round"/><g clip-path="url(%23c)"><use href="%23s" fill="%231a2937"/><use href="%23s" fill="%2320313f" transform="translate(-8,-9)"/></g></svg>');
     --tab-eagle-sky-horizon: var(--md-sys-color-surface);
     --md-sys-elevation-level1: 0 1px 2px rgba(0, 0, 0, 0.32), 0 1px 3px 1px rgba(0, 0, 0, 0.24);
     --md-sys-elevation-level2: 0 1px 2px rgba(0, 0, 0, 0.36), 0 2px 6px 2px rgba(0, 0, 0, 0.28);
@@ -91,9 +93,10 @@
   --tab-eagle-sky-zenith: color-mix(in srgb, var(--md-sys-color-primary-container) 48%, var(--md-sys-color-surface));
   --tab-eagle-sky-mid: color-mix(in srgb, var(--md-sys-color-primary-container) 22%, var(--md-sys-color-surface));
   --tab-eagle-stars: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 140"><defs><mask id="m"><rect width="600" height="140" fill="white"/><circle cx="531" cy="41" r="19" fill="black"/></mask></defs><circle cx="520" cy="48" r="21" fill="%23cfe3f2" mask="url(%23m)"/><path fill="%23cfe3f2" opacity="0.95" d="M236 22 L238.5 38 L236 54 L233.5 38 Z"/><path fill="%23cfe3f2" opacity="0.95" d="M220 38 L236 35.5 L252 38 L236 40.5 Z"/><circle cx="60" cy="84" r="2.5" fill="%23bcd9ee" opacity="0.9"/><circle cx="96" cy="52" r="1.6" fill="%23bcd9ee" opacity="0.7"/><circle cx="150" cy="70" r="2" fill="%23bcd9ee" opacity="0.8"/><circle cx="320" cy="90" r="1.8" fill="%23bcd9ee" opacity="0.65"/><circle cx="356" cy="30" r="2.4" fill="%23bcd9ee" opacity="0.85"/><circle cx="430" cy="64" r="1.5" fill="%23bcd9ee" opacity="0.6"/></svg>');
-  --tab-eagle-cloud-a: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 260 150"><defs><g id="s"><circle cx="150" cy="64" r="46"/><circle cx="96" cy="84" r="34"/><circle cx="56" cy="100" r="24"/><circle cx="204" cy="92" r="28"/><rect x="32" y="96" width="204" height="34" rx="17"/></g><clipPath id="c"><circle cx="150" cy="64" r="46"/><circle cx="96" cy="84" r="34"/><circle cx="56" cy="100" r="24"/><circle cx="204" cy="92" r="28"/><rect x="32" y="96" width="204" height="34" rx="17"/></clipPath></defs><use href="%23s" fill="%2355809f" stroke="%2355809f" stroke-width="5" stroke-linejoin="round"/><g clip-path="url(%23c)"><use href="%23s" fill="%231b2d3c"/><use href="%23s" fill="%23253a4d" transform="translate(-9,-11)"/></g></svg>');
-  --tab-eagle-cloud-b: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 120"><defs><g id="s"><circle cx="76" cy="52" r="36"/><circle cx="124" cy="68" r="28"/><circle cx="160" cy="82" r="18"/><rect x="26" y="72" width="152" height="28" rx="14"/></g><clipPath id="c"><circle cx="76" cy="52" r="36"/><circle cx="124" cy="68" r="28"/><circle cx="160" cy="82" r="18"/><rect x="26" y="72" width="152" height="28" rx="14"/></clipPath></defs><use href="%23s" fill="%2355809f" stroke="%2355809f" stroke-width="5" stroke-linejoin="round"/><g clip-path="url(%23c)"><use href="%23s" fill="%231b2d3c"/><use href="%23s" fill="%23253a4d" transform="translate(-8,-9)"/></g></svg>');
-  --tab-eagle-cloud-c: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 100"><defs><g id="s"><circle cx="62" cy="50" r="26"/><circle cx="104" cy="42" r="30"/><rect x="30" y="56" width="104" height="24" rx="12"/></g><clipPath id="c"><circle cx="62" cy="50" r="26"/><circle cx="104" cy="42" r="30"/><rect x="30" y="56" width="104" height="24" rx="12"/></clipPath></defs><use href="%23s" fill="%2355809f" stroke="%2355809f" stroke-width="5.5" stroke-linejoin="round"/><g clip-path="url(%23c)"><use href="%23s" fill="%231b2d3c"/><use href="%23s" fill="%23253a4d" transform="translate(-6,-7)"/></g></svg>');
+  --tab-eagle-cloud-a: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 260 150"><defs><g id="s"><circle cx="150" cy="64" r="46"/><circle cx="96" cy="84" r="34"/><circle cx="56" cy="100" r="24"/><circle cx="204" cy="92" r="28"/><rect x="32" y="96" width="204" height="34" rx="17"/></g><clipPath id="c"><circle cx="150" cy="64" r="46"/><circle cx="96" cy="84" r="34"/><circle cx="56" cy="100" r="24"/><circle cx="204" cy="92" r="28"/><rect x="32" y="96" width="204" height="34" rx="17"/></clipPath></defs><use href="%23s" fill="%2355809f" stroke="%2355809f" stroke-width="5" stroke-linejoin="round"/><g clip-path="url(%23c)"><use href="%23s" fill="%23192b3b"/><use href="%23s" fill="%23253a4d" transform="translate(-12,-14)"/></g></svg>');
+  --tab-eagle-cloud-b: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 120"><defs><g id="s"><circle cx="76" cy="52" r="36"/><circle cx="124" cy="68" r="28"/><circle cx="160" cy="82" r="18"/><rect x="26" y="72" width="152" height="28" rx="14"/></g><clipPath id="c"><circle cx="76" cy="52" r="36"/><circle cx="124" cy="68" r="28"/><circle cx="160" cy="82" r="18"/><rect x="26" y="72" width="152" height="28" rx="14"/></clipPath></defs><use href="%23s" fill="%2355809f" stroke="%2355809f" stroke-width="5" stroke-linejoin="round"/><g clip-path="url(%23c)"><use href="%23s" fill="%23192b3b"/><use href="%23s" fill="%23253a4d" transform="translate(-11,-12)"/></g></svg>');
+  --tab-eagle-cloud-c: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 100"><defs><g id="s"><circle cx="62" cy="50" r="26"/><circle cx="104" cy="42" r="30"/><rect x="30" y="56" width="104" height="24" rx="12"/></g><clipPath id="c"><circle cx="62" cy="50" r="26"/><circle cx="104" cy="42" r="30"/><rect x="30" y="56" width="104" height="24" rx="12"/></clipPath></defs><use href="%23s" fill="%233d5a73" stroke="%233d5a73" stroke-width="5.5" stroke-linejoin="round"/><g clip-path="url(%23c)"><use href="%23s" fill="%231a2937"/><use href="%23s" fill="%2320313f" transform="translate(-8,-9)"/></g></svg>');
+  --tab-eagle-cloud-d: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 150 95"><defs><g id="s"><circle cx="52" cy="44" r="28"/><circle cx="94" cy="52" r="20"/><rect x="24" y="54" width="96" height="22" rx="11"/></g><clipPath id="c"><circle cx="52" cy="44" r="28"/><circle cx="94" cy="52" r="20"/><rect x="24" y="54" width="96" height="22" rx="11"/></clipPath></defs><use href="%23s" fill="%233d5a73" stroke="%233d5a73" stroke-width="5.5" stroke-linejoin="round"/><g clip-path="url(%23c)"><use href="%23s" fill="%231a2937"/><use href="%23s" fill="%2320313f" transform="translate(-8,-9)"/></g></svg>');
   --tab-eagle-sky-horizon: var(--md-sys-color-surface);
   --md-sys-elevation-level1: 0 1px 2px rgba(0, 0, 0, 0.32), 0 1px 3px 1px rgba(0, 0, 0, 0.24);
   --md-sys-elevation-level2: 0 1px 2px rgba(0, 0, 0, 0.36), 0 2px 6px 2px rgba(0, 0, 0, 0.28);
@@ -131,10 +134,10 @@ button {
   background-image:
     var(--tab-eagle-stars),
     var(--tab-eagle-cloud-c),
-    var(--tab-eagle-cloud-c),
+    var(--tab-eagle-cloud-d),
     var(--tab-eagle-cloud-a),
     var(--tab-eagle-cloud-b),
-    var(--tab-eagle-cloud-c),
+    var(--tab-eagle-cloud-d),
     linear-gradient(
       to bottom in oklab,
       var(--tab-eagle-sky-zenith),
@@ -143,21 +146,42 @@ button {
     );
   background-repeat: no-repeat;
   background-position:
-    right 4% top 64px,
-    right calc((100vw - 1440px) / 2 - 150px) top 40%,
-    left calc((100vw - 1440px) / 2 - 170px) top 22%,
+    right 12px top 80px,
+    left calc((100vw - 1440px) / 2 - 170px) top 16%,
+    right calc((100vw - 1440px) / 2 - 150px) top 52%,
     right -50px bottom -40px,
     left -60px bottom -28px,
-    left 45% bottom 132px,
+    left 37% bottom 148px,
     0 0;
   background-size:
-    440px auto,
-    120px auto,
-    140px auto,
+    320px auto,
+    116px auto,
+    168px auto,
     330px auto,
     210px auto,
-    96px auto,
+    92px auto,
     auto;
+}
+
+@media (min-width: 1600px) {
+  .sky-background {
+    background-position:
+      right 4% top 64px,
+      left calc((100vw - 1440px) / 2 - 170px) top 16%,
+      right calc((100vw - 1440px) / 2 - 150px) top 52%,
+      right -50px bottom -40px,
+      left -60px bottom -28px,
+      left 37% bottom 148px,
+      0 0;
+    background-size:
+      440px auto,
+      116px auto,
+      168px auto,
+      330px auto,
+      210px auto,
+      92px auto,
+      auto;
+  }
 }
 
 .top-bar {
@@ -511,6 +535,17 @@ h1 {
   gap: 10px;
   min-width: 0;
   min-height: 40px;
+}
+
+.reading-list-button.is-idle {
+  opacity: 0;
+  transition: opacity 140ms ease;
+}
+
+.tab-card:hover .reading-list-button.is-idle,
+.tab-card:focus-within .reading-list-button.is-idle,
+.tab-card.is-selected .reading-list-button.is-idle {
+  opacity: 1;
 }
 
 .reading-list-button {
