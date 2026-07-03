@@ -147,11 +147,11 @@ button {
   background-repeat: no-repeat;
   background-position:
     right 12px top 80px,
-    left calc((100vw - 1440px) / 2 - 170px) top 16%,
-    right calc((100vw - 1440px) / 2 - 150px) top 52%,
-    right -50px bottom -40px,
-    left -60px bottom -28px,
-    left 37% bottom 148px,
+    left calc((100vw - 1440px) / 2 - 170px) top calc(16% + var(--tab-eagle-drift-dy, 0px)),
+    right calc((100vw - 1440px) / 2 - 150px) top calc(52% + var(--tab-eagle-drift-ey, 0px)),
+    right calc(-50px + var(--tab-eagle-drift-ax, 0px)) bottom calc(-40px + var(--tab-eagle-drift-ay, 0px)),
+    left calc(-60px + var(--tab-eagle-drift-bx, 0px)) bottom -28px,
+    left calc(37% + var(--tab-eagle-drift-cx, 0px)) bottom calc(148px + var(--tab-eagle-drift-cy, 0px)),
     0 0;
   background-size:
     320px auto,
@@ -167,11 +167,11 @@ button {
   .sky-background {
     background-position:
       right 4% top 64px,
-      left calc((100vw - 1440px) / 2 - 170px) top 16%,
-      right calc((100vw - 1440px) / 2 - 150px) top 52%,
-      right -50px bottom -40px,
-      left -60px bottom -28px,
-      left 37% bottom 148px,
+      left calc((100vw - 1440px) / 2 - 170px) top calc(16% + var(--tab-eagle-drift-dy, 0px)),
+      right calc((100vw - 1440px) / 2 - 150px) top calc(52% + var(--tab-eagle-drift-ey, 0px)),
+      right calc(-50px + var(--tab-eagle-drift-ax, 0px)) bottom calc(-40px + var(--tab-eagle-drift-ay, 0px)),
+      left calc(-60px + var(--tab-eagle-drift-bx, 0px)) bottom -28px,
+      left calc(37% + var(--tab-eagle-drift-cx, 0px)) bottom calc(148px + var(--tab-eagle-drift-cy, 0px)),
       0 0;
     background-size:
       440px auto,

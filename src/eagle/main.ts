@@ -18,6 +18,7 @@ import {
   reconcileSelectedTabId,
   type SearchNavigationKey
 } from './search-selection';
+import { skyDriftAt } from './sky-drift';
 import { filterTabsBySearch, nextSortMode, sortTabs, toManagedTab, toReadingListUrl } from './tab-model';
 
 const SORT_STORAGE_KEY = 'sortMode';
@@ -86,8 +87,19 @@ async function init(): Promise<void> {
 
   bindEvents();
   syncSortControl();
+  applySkyDrift();
+  window.setInterval(applySkyDrift, 60_000);
   await refreshReadingList();
   await refreshTabs();
+}
+
+function applySkyDrift(): void {
+  const drift = skyDriftAt(new Date());
+  const root = document.documentElement.style;
+
+  for (const [key, value] of Object.entries(drift)) {
+    root.setProperty(`--tab-eagle-drift-${key}`, `${value}px`);
+  }
 }
 
 function bindEvents(): void {
