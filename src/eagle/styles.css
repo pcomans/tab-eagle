@@ -140,8 +140,8 @@ button {
   overflow: hidden;
   background-image:
     var(--tab-eagle-stars),
-    var(--tab-eagle-cloud-c),
-    var(--tab-eagle-cloud-d),
+    var(--tab-eagle-margin-cloud-left, none),
+    var(--tab-eagle-margin-cloud-right, none),
     var(--tab-eagle-cloud-a),
     var(--tab-eagle-cloud-b),
     var(--tab-eagle-cloud-d),
@@ -154,8 +154,8 @@ button {
   background-repeat: no-repeat;
   background-position:
     right 12px top 80px,
-    left calc((100vw - 1440px) / 2 - 170px) top calc(16% + var(--tab-eagle-drift-dy, 0px)),
-    right calc((100vw - 1440px) / 2 - 150px) top calc(52% + var(--tab-eagle-drift-ey, 0px)),
+    left calc((100vw - 1440px) / 4 - 58px) top calc(16% + var(--tab-eagle-drift-dy, 0px)),
+    right calc((100vw - 1440px) / 4 - 84px) top calc(52% + var(--tab-eagle-drift-ey, 0px)),
     right calc(-50px + var(--tab-eagle-drift-ax, 0px)) bottom calc(-40px + var(--tab-eagle-drift-ay, 0px)),
     left calc(-60px + var(--tab-eagle-drift-bx, 0px)) bottom -28px,
     left calc(37% + var(--tab-eagle-drift-cx, 0px)) bottom calc(148px + var(--tab-eagle-drift-cy, 0px)),
@@ -174,20 +174,35 @@ button {
   .sky-background {
     background-position:
       right 4% top 64px,
-        left calc((100vw - 1440px) / 2 - 170px) top calc(16% + var(--tab-eagle-drift-dy, 0px)),
-      right calc((100vw - 1440px) / 2 - 150px) top calc(52% + var(--tab-eagle-drift-ey, 0px)),
+      left calc((100vw - 1440px) / 4 - 58px) top calc(16% + var(--tab-eagle-drift-dy, 0px)),
+      right calc((100vw - 1440px) / 4 - 84px) top calc(52% + var(--tab-eagle-drift-ey, 0px)),
       right calc(-50px + var(--tab-eagle-drift-ax, 0px)) bottom calc(-40px + var(--tab-eagle-drift-ay, 0px)),
       left calc(-60px + var(--tab-eagle-drift-bx, 0px)) bottom -28px,
       left calc(37% + var(--tab-eagle-drift-cx, 0px)) bottom calc(148px + var(--tab-eagle-drift-cy, 0px)),
       0 0;
     background-size:
       440px auto,
-        116px auto,
+      116px auto,
       168px auto,
       330px auto,
       210px auto,
       92px auto,
       auto;
+  }
+}
+
+/* Margin clouds render only when the free margin gives them at least
+   ~40px of air on both sides; centered in the margin, their clearance
+   grows with the window instead of hugging the card column. */
+@media (min-width: 1840px) {
+  .sky-background {
+    --tab-eagle-margin-cloud-left: var(--tab-eagle-cloud-c);
+  }
+}
+
+@media (min-width: 1940px) {
+  .sky-background {
+    --tab-eagle-margin-cloud-right: var(--tab-eagle-cloud-d);
   }
 }
 
