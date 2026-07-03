@@ -42,12 +42,21 @@ const domainColorCache = new Map<string, DomainCardColors | null>();
 const domainColorRequests = new Set<string>();
 const colorSchemeQuery = window.matchMedia('(prefers-color-scheme: dark)');
 
+const SKY_DEPTH_CACHE_KEY = 'tabEagleSkyDepth';
+
 const grid = requiredElement<HTMLDivElement>('#tab-grid');
 const tabCount = requiredElement<HTMLParagraphElement>('#tab-count');
 const statusEl = requiredElement<HTMLDivElement>('#status');
 const returnOriginButton = requiredElement<HTMLElement>('#return-origin');
 const searchInput = requiredElement<HTMLElement & { value: string }>('#tab-search');
 const sortButtons = Array.from(document.querySelectorAll<HTMLElement>('[data-sort]'));
+
+// Paint the sky right on the first frame: drift is pure math, and the
+// cached depth avoids the 430px-default gradient snapping to the real
+// tab count once the async tab query lands.
+applySkyDrift();
+applyCachedSkyDepth();
+window.setInterval(applySkyDrift, 60_000);
 
 void init();
 
@@ -87,10 +96,16 @@ async function init(): Promise<void> {
 
   bindEvents();
   syncSortControl();
-  applySkyDrift();
-  window.setInterval(applySkyDrift, 60_000);
   await refreshReadingList();
   await refreshTabs();
+}
+
+function applyCachedSkyDepth(): void {
+  const cached = Number(localStorage.getItem(SKY_DEPTH_CACHE_KEY));
+
+  if (Number.isFinite(cached) && cached >= MIN_SKY_DEPTH_PX && cached <= MAX_SKY_DEPTH_PX) {
+    document.documentElement.style.setProperty('--tab-eagle-sky-depth', `${cached}px`);
+  }
 }
 
 function applySkyDrift(): void {
@@ -380,6 +395,7 @@ function render(): void {
 function updateSkyDepth(tabTotal: number): void {
   const skyDepth = Math.min(MAX_SKY_DEPTH_PX, MIN_SKY_DEPTH_PX + tabTotal * SKY_DEPTH_PER_TAB_PX);
   document.documentElement.style.setProperty('--tab-eagle-sky-depth', `${skyDepth}px`);
+  localStorage.setItem(SKY_DEPTH_CACHE_KEY, String(skyDepth));
 }
 
 function createTabCard(tab: ManagedTab): HTMLElement {
