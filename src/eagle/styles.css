@@ -18,11 +18,14 @@
   --md-sys-color-surface-container-highest: #e2e5e9;
   --md-sys-color-outline: #70787f;
   --md-sys-color-outline-variant: #c0c7cf;
-  --tab-eagle-sky: #dff3ff;
+  --tab-eagle-sky-zenith: color-mix(in srgb, var(--md-sys-color-primary) 12%, var(--md-sys-color-primary-container));
+  --tab-eagle-sky-mid: color-mix(in srgb, var(--md-sys-color-primary-container) 52%, var(--md-sys-color-surface));
+  --tab-eagle-sky-haze: color-mix(in srgb, #ffe7c4 24%, var(--md-sys-color-surface));
   --tab-eagle-sky-horizon: var(--md-sys-color-surface);
   --tab-eagle-sky-depth: 430px;
-  --tab-eagle-cloud: var(--md-sys-color-surface);
-  --tab-eagle-cloud-shadow: var(--md-sys-color-surface-container-high);
+  --tab-eagle-sky-glow: color-mix(in srgb, #ffffff 65%, transparent);
+  --tab-eagle-haze: color-mix(in srgb, #ffffff 85%, transparent);
+  --tab-eagle-haze-opacity: 0.55;
   --md-sys-shape-corner-small: 4px;
   --md-sys-shape-corner-medium: 6px;
   --md-sys-shape-corner-large: 8px;
@@ -51,10 +54,13 @@
     --md-sys-color-surface-container-highest: #32353a;
     --md-sys-color-outline: #8a9299;
     --md-sys-color-outline-variant: #40484f;
-    --tab-eagle-sky: #0c2332;
+    --tab-eagle-sky-zenith: color-mix(in srgb, var(--md-sys-color-primary-container) 42%, var(--md-sys-color-surface));
+    --tab-eagle-sky-mid: color-mix(in srgb, var(--md-sys-color-primary-container) 20%, var(--md-sys-color-surface));
+    --tab-eagle-sky-haze: color-mix(in srgb, #ffb26b 7%, var(--md-sys-color-surface));
     --tab-eagle-sky-horizon: var(--md-sys-color-surface);
-    --tab-eagle-cloud: var(--md-sys-color-surface-container-highest);
-    --tab-eagle-cloud-shadow: var(--md-sys-color-surface-container);
+    --tab-eagle-sky-glow: color-mix(in srgb, var(--md-sys-color-primary) 15%, transparent);
+    --tab-eagle-haze: color-mix(in srgb, var(--md-sys-color-primary-container) 45%, transparent);
+    --tab-eagle-haze-opacity: 0.4;
     --md-sys-elevation-level1: 0 1px 2px rgba(0, 0, 0, 0.32), 0 1px 3px 1px rgba(0, 0, 0, 0.24);
     --md-sys-elevation-level2: 0 1px 2px rgba(0, 0, 0, 0.36), 0 2px 6px 2px rgba(0, 0, 0, 0.28);
   }
@@ -82,10 +88,13 @@
   --md-sys-color-surface-container-highest: #32353a;
   --md-sys-color-outline: #8a9299;
   --md-sys-color-outline-variant: #40484f;
-  --tab-eagle-sky: #0c2332;
+  --tab-eagle-sky-zenith: color-mix(in srgb, var(--md-sys-color-primary-container) 42%, var(--md-sys-color-surface));
+  --tab-eagle-sky-mid: color-mix(in srgb, var(--md-sys-color-primary-container) 20%, var(--md-sys-color-surface));
+  --tab-eagle-sky-haze: color-mix(in srgb, #ffb26b 7%, var(--md-sys-color-surface));
   --tab-eagle-sky-horizon: var(--md-sys-color-surface);
-  --tab-eagle-cloud: var(--md-sys-color-surface-container-highest);
-  --tab-eagle-cloud-shadow: var(--md-sys-color-surface-container);
+  --tab-eagle-sky-glow: color-mix(in srgb, var(--md-sys-color-primary) 15%, transparent);
+  --tab-eagle-haze: color-mix(in srgb, var(--md-sys-color-primary-container) 45%, transparent);
+  --tab-eagle-haze-opacity: 0.4;
   --md-sys-elevation-level1: 0 1px 2px rgba(0, 0, 0, 0.32), 0 1px 3px 1px rgba(0, 0, 0, 0.24);
   --md-sys-elevation-level2: 0 1px 2px rgba(0, 0, 0, 0.36), 0 2px 6px 2px rgba(0, 0, 0, 0.28);
 }
@@ -98,9 +107,7 @@ body {
   margin: 0;
   min-width: 320px;
   min-height: 100vh;
-  background:
-    linear-gradient(180deg, var(--tab-eagle-sky) 0%, var(--tab-eagle-sky-horizon) var(--tab-eagle-sky-depth)),
-    var(--md-sys-color-surface);
+  background: var(--md-sys-color-surface);
   overflow-x: hidden;
 }
 
@@ -122,87 +129,40 @@ button {
   pointer-events: none;
   overflow: hidden;
   background:
-    radial-gradient(circle at 22% 12%, color-mix(in srgb, var(--md-sys-color-primary-container) 36%, transparent), transparent 24%),
-    linear-gradient(180deg, var(--tab-eagle-sky) 0%, var(--tab-eagle-sky-horizon) var(--tab-eagle-sky-depth));
+    radial-gradient(ellipse 140% 70% at 25% -20%, var(--tab-eagle-sky-glow), transparent 55%),
+    linear-gradient(
+      to bottom in oklab,
+      var(--tab-eagle-sky-zenith),
+      var(--tab-eagle-sky-mid) calc(var(--tab-eagle-sky-depth) * 0.45),
+      var(--tab-eagle-sky-haze) calc(var(--tab-eagle-sky-depth) * 0.85),
+      var(--tab-eagle-sky-horizon) var(--tab-eagle-sky-depth)
+    );
 }
 
-.cloud {
-  position: absolute;
-  display: block;
-  width: var(--cloud-width);
-  height: var(--cloud-height);
-  border-radius: 999px;
-  background: color-mix(in srgb, var(--tab-eagle-cloud) 92%, transparent);
-  border: 1px solid color-mix(in srgb, var(--tab-eagle-cloud-shadow) 76%, transparent);
-  opacity: var(--cloud-opacity);
-  filter: blur(0.2px);
-  animation: cloud-drift var(--cloud-duration) ease-in-out infinite alternate;
-}
-
-.cloud::before,
-.cloud::after {
+.sky-background::before,
+.sky-background::after {
   content: "";
   position: absolute;
-  bottom: 28%;
   border-radius: 50%;
-  background: color-mix(in srgb, var(--tab-eagle-cloud) 94%, transparent);
+  background: var(--tab-eagle-haze);
+  opacity: var(--tab-eagle-haze-opacity);
 }
 
-.cloud::before {
-  left: 18%;
-  width: 34%;
-  height: 86%;
+.sky-background::before {
+  top: calc(var(--tab-eagle-sky-depth) * 0.26);
+  left: -12vw;
+  width: 64vw;
+  height: 22vh;
+  filter: blur(72px);
 }
 
-.cloud::after {
-  right: 16%;
-  width: 42%;
-  height: 112%;
-}
-
-.cloud-one {
-  --cloud-width: 260px;
-  --cloud-height: 72px;
-  --cloud-opacity: 0.9;
-  --cloud-duration: 18s;
-  top: 94px;
-  left: max(32px, calc((100vw - 1440px) / 2 + 252px));
-}
-
-.cloud-two {
-  --cloud-width: 300px;
-  --cloud-height: 82px;
-  --cloud-opacity: 0.62;
-  --cloud-duration: 24s;
-  top: 420px;
-  right: max(40px, calc((100vw - 1440px) / 2 + 24px));
-  animation-delay: -8s;
-}
-
-.cloud-three {
-  --cloud-width: 180px;
-  --cloud-height: 54px;
-  --cloud-opacity: 0.54;
-  --cloud-duration: 21s;
-  top: 68vh;
-  left: max(28px, calc((100vw - 1440px) / 2 + 180px));
-  animation-delay: -14s;
-}
-
-@keyframes cloud-drift {
-  from {
-    transform: translate3d(-8px, 0, 0);
-  }
-
-  to {
-    transform: translate3d(10px, -4px, 0);
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .cloud {
-    animation: none;
-  }
+.sky-background::after {
+  top: calc(var(--tab-eagle-sky-depth) * 0.52);
+  right: -14vw;
+  width: 72vw;
+  height: 24vh;
+  filter: blur(88px);
+  opacity: calc(var(--tab-eagle-haze-opacity) * 0.75);
 }
 
 .top-bar {
@@ -331,7 +291,7 @@ h1 {
   overflow: hidden;
   cursor: pointer;
   isolation: isolate;
-  box-shadow: none;
+  box-shadow: var(--md-sys-elevation-level1);
   transition:
     background-color 140ms ease,
     border-color 140ms ease,
@@ -351,7 +311,7 @@ h1 {
 .tab-card:hover {
   border-color: var(--md-sys-color-outline);
   background: var(--md-sys-color-surface-container);
-  box-shadow: var(--md-sys-elevation-level1);
+  box-shadow: var(--md-sys-elevation-level2);
 }
 
 .tab-card.is-selected {
