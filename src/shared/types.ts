@@ -18,6 +18,12 @@ export interface ManagedTab {
   lastAccessed?: number;
 }
 
+export interface EagleReopenMessage {
+  type: 'tab-eagle-reopen';
+  sourceTabId: number;
+  sourceWindowId: number;
+}
+
 export interface EagleState {
   sourceWindowId: number;
   selfTabId?: number;

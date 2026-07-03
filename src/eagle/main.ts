@@ -8,7 +8,7 @@ import '@material/web/ripple/ripple.js';
 import '@material/web/textfield/outlined-text-field.js';
 import './styles.css';
 
-import type { EagleState, ManagedTab, SortMode } from '../shared/types';
+import type { EagleReopenMessage, EagleState, ManagedTab, SortMode } from '../shared/types';
 import { getEagleBaseUrl, isEagleUrl } from '../shared/urls';
 import { ageBucketForLastAccessed, colorsForAgeBucket, isAgeSortMode, type ThemeMode } from './age-colors';
 import { colorsFromImage, faviconUrlForPageUrl, loadImage, type DomainCardColors } from './domain-colors';
@@ -98,6 +98,16 @@ async function init(): Promise<void> {
   syncSortControl();
   await refreshReadingList();
   await refreshTabs();
+}
+
+function isReopenMessage(message: unknown): message is EagleReopenMessage {
+  if (typeof message !== 'object' || message === null) return false;
+  const candidate = message as Partial<EagleReopenMessage>;
+  return (
+    candidate.type === 'tab-eagle-reopen' &&
+    typeof candidate.sourceTabId === 'number' &&
+    typeof candidate.sourceWindowId === 'number'
+  );
 }
 
 function applyCachedSkyDepth(): void {
@@ -246,6 +256,19 @@ function bindEvents(): void {
     domainColorCache.clear();
     domainColorRequests.clear();
     render();
+  });
+
+  chrome.runtime.onMessage.addListener((message: unknown, _sender, sendResponse) => {
+    if (!isReopenMessage(message) || message.sourceWindowId !== state.sourceWindowId) {
+      return;
+    }
+
+    state.originTabId = message.sourceTabId === state.selfTabId ? undefined : message.sourceTabId;
+    setSearchQuery('');
+    applySkyDrift();
+    window.scrollTo({ top: 0 });
+    void refreshTabs();
+    sendResponse(true);
   });
 
   if (chrome.readingList) {
