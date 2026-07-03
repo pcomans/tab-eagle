@@ -23,7 +23,6 @@
   --tab-eagle-sky-horizon: color-mix(in srgb, var(--md-sys-color-primary-container) 14%, var(--md-sys-color-surface));
   --tab-eagle-sky-depth: 430px;
   --tab-eagle-stars: none;
-  --tab-eagle-birds: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 80"><g fill="none" stroke="%237d94a6" stroke-linecap="round"><path stroke-width="3.5" d="M24 34 Q33 22 42 31 Q51 22 60 34"/><path stroke-width="2.8" d="M124 54 Q131 45 138 52 Q145 45 152 54"/></g></svg>');
   --tab-eagle-cloud-a: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 260 150"><defs><g id="s"><circle cx="150" cy="64" r="46"/><circle cx="96" cy="84" r="34"/><circle cx="56" cy="100" r="24"/><circle cx="204" cy="92" r="28"/><rect x="32" y="96" width="204" height="34" rx="17"/></g><clipPath id="c"><circle cx="150" cy="64" r="46"/><circle cx="96" cy="84" r="34"/><circle cx="56" cy="100" r="24"/><circle cx="204" cy="92" r="28"/><rect x="32" y="96" width="204" height="34" rx="17"/></clipPath></defs><use href="%23s" fill="%2330241e" stroke="%2330241e" stroke-width="5" stroke-linejoin="round"/><g clip-path="url(%23c)"><use href="%23s" fill="%23c3daed"/><use href="%23s" fill="%23ffffff" transform="translate(-12,-14)"/></g></svg>');
   --tab-eagle-cloud-b: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 120"><defs><g id="s"><circle cx="76" cy="52" r="36"/><circle cx="124" cy="68" r="28"/><circle cx="160" cy="82" r="18"/><rect x="26" y="72" width="152" height="28" rx="14"/></g><clipPath id="c"><circle cx="76" cy="52" r="36"/><circle cx="124" cy="68" r="28"/><circle cx="160" cy="82" r="18"/><rect x="26" y="72" width="152" height="28" rx="14"/></clipPath></defs><use href="%23s" fill="%2330241e" stroke="%2330241e" stroke-width="5" stroke-linejoin="round"/><g clip-path="url(%23c)"><use href="%23s" fill="%23c3daed"/><use href="%23s" fill="%23ffffff" transform="translate(-11,-12)"/></g></svg>');
   --tab-eagle-cloud-c: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 100"><defs><g id="s"><circle cx="62" cy="50" r="26"/><circle cx="104" cy="42" r="30"/><rect x="30" y="56" width="104" height="24" rx="12"/></g><clipPath id="c"><circle cx="62" cy="50" r="26"/><circle cx="104" cy="42" r="30"/><rect x="30" y="56" width="104" height="24" rx="12"/></clipPath></defs><use href="%23s" fill="%237d94a6" stroke="%237d94a6" stroke-width="5.5" stroke-linejoin="round"/><g clip-path="url(%23c)"><use href="%23s" fill="%23dcebf7"/><use href="%23s" fill="%23f4f9fd" transform="translate(-8,-9)"/></g></svg>');
@@ -64,7 +63,6 @@
     --tab-eagle-cloud-c: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 100"><defs><g id="s"><circle cx="62" cy="50" r="26"/><circle cx="104" cy="42" r="30"/><rect x="30" y="56" width="104" height="24" rx="12"/></g><clipPath id="c"><circle cx="62" cy="50" r="26"/><circle cx="104" cy="42" r="30"/><rect x="30" y="56" width="104" height="24" rx="12"/></clipPath></defs><use href="%23s" fill="%233d5a73" stroke="%233d5a73" stroke-width="5.5" stroke-linejoin="round"/><g clip-path="url(%23c)"><use href="%23s" fill="%231a2937"/><use href="%23s" fill="%2320313f" transform="translate(-8,-9)"/></g></svg>');
     --tab-eagle-cloud-d: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 150 95"><defs><g id="s"><circle cx="52" cy="44" r="28"/><circle cx="94" cy="52" r="20"/><rect x="24" y="54" width="96" height="22" rx="11"/></g><clipPath id="c"><circle cx="52" cy="44" r="28"/><circle cx="94" cy="52" r="20"/><rect x="24" y="54" width="96" height="22" rx="11"/></clipPath></defs><use href="%23s" fill="%233d5a73" stroke="%233d5a73" stroke-width="5.5" stroke-linejoin="round"/><g clip-path="url(%23c)"><use href="%23s" fill="%231a2937"/><use href="%23s" fill="%2320313f" transform="translate(-8,-9)"/></g></svg>');
     --tab-eagle-sky-horizon: color-mix(in srgb, var(--md-sys-color-primary-container) 8%, var(--md-sys-color-surface));
-    --tab-eagle-birds: none;
     --md-sys-elevation-level1: 0 1px 2px rgba(0, 0, 0, 0.32), 0 1px 3px 1px rgba(0, 0, 0, 0.24);
     --md-sys-elevation-level2: 0 1px 2px rgba(0, 0, 0, 0.36), 0 2px 6px 2px rgba(0, 0, 0, 0.28);
   }
@@ -100,7 +98,6 @@
   --tab-eagle-cloud-c: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 100"><defs><g id="s"><circle cx="62" cy="50" r="26"/><circle cx="104" cy="42" r="30"/><rect x="30" y="56" width="104" height="24" rx="12"/></g><clipPath id="c"><circle cx="62" cy="50" r="26"/><circle cx="104" cy="42" r="30"/><rect x="30" y="56" width="104" height="24" rx="12"/></clipPath></defs><use href="%23s" fill="%233d5a73" stroke="%233d5a73" stroke-width="5.5" stroke-linejoin="round"/><g clip-path="url(%23c)"><use href="%23s" fill="%231a2937"/><use href="%23s" fill="%2320313f" transform="translate(-8,-9)"/></g></svg>');
   --tab-eagle-cloud-d: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 150 95"><defs><g id="s"><circle cx="52" cy="44" r="28"/><circle cx="94" cy="52" r="20"/><rect x="24" y="54" width="96" height="22" rx="11"/></g><clipPath id="c"><circle cx="52" cy="44" r="28"/><circle cx="94" cy="52" r="20"/><rect x="24" y="54" width="96" height="22" rx="11"/></clipPath></defs><use href="%23s" fill="%233d5a73" stroke="%233d5a73" stroke-width="5.5" stroke-linejoin="round"/><g clip-path="url(%23c)"><use href="%23s" fill="%231a2937"/><use href="%23s" fill="%2320313f" transform="translate(-8,-9)"/></g></svg>');
   --tab-eagle-sky-horizon: color-mix(in srgb, var(--md-sys-color-primary-container) 8%, var(--md-sys-color-surface));
-  --tab-eagle-birds: none;
   --md-sys-elevation-level1: 0 1px 2px rgba(0, 0, 0, 0.32), 0 1px 3px 1px rgba(0, 0, 0, 0.24);
   --md-sys-elevation-level2: 0 1px 2px rgba(0, 0, 0, 0.36), 0 2px 6px 2px rgba(0, 0, 0, 0.28);
 }
@@ -136,7 +133,6 @@ button {
   overflow: hidden;
   background-image:
     var(--tab-eagle-stars),
-    var(--tab-eagle-birds),
     var(--tab-eagle-cloud-c),
     var(--tab-eagle-cloud-d),
     var(--tab-eagle-cloud-a),
@@ -151,7 +147,6 @@ button {
   background-repeat: no-repeat;
   background-position:
     right 12px top 80px,
-    left calc(34% + var(--tab-eagle-drift-bx, 0px)) top 86px,
     left calc((100vw - 1440px) / 2 - 170px) top calc(16% + var(--tab-eagle-drift-dy, 0px)),
     right calc((100vw - 1440px) / 2 - 150px) top calc(52% + var(--tab-eagle-drift-ey, 0px)),
     right calc(-50px + var(--tab-eagle-drift-ax, 0px)) bottom calc(-40px + var(--tab-eagle-drift-ay, 0px)),
@@ -160,7 +155,6 @@ button {
     0 0;
   background-size:
     320px auto,
-    150px auto,
     116px auto,
     168px auto,
     330px auto,
@@ -173,8 +167,7 @@ button {
   .sky-background {
     background-position:
       right 4% top 64px,
-      left calc(34% + var(--tab-eagle-drift-bx, 0px)) top 86px,
-      left calc((100vw - 1440px) / 2 - 170px) top calc(16% + var(--tab-eagle-drift-dy, 0px)),
+        left calc((100vw - 1440px) / 2 - 170px) top calc(16% + var(--tab-eagle-drift-dy, 0px)),
       right calc((100vw - 1440px) / 2 - 150px) top calc(52% + var(--tab-eagle-drift-ey, 0px)),
       right calc(-50px + var(--tab-eagle-drift-ax, 0px)) bottom calc(-40px + var(--tab-eagle-drift-ay, 0px)),
       left calc(-60px + var(--tab-eagle-drift-bx, 0px)) bottom -28px,
@@ -182,8 +175,7 @@ button {
       0 0;
     background-size:
       440px auto,
-      150px auto,
-      116px auto,
+        116px auto,
       168px auto,
       330px auto,
       210px auto,
