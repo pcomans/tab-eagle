@@ -8,11 +8,7 @@
   </head>
   <body>
     <main class="app-shell">
-      <div class="sky-background" aria-hidden="true">
-        <span class="cloud cloud-one"></span>
-        <span class="cloud cloud-two"></span>
-        <span class="cloud cloud-three"></span>
-      </div>
+      <div class="sky-background" aria-hidden="true"></div>
 
       <header class="top-bar">
         <div class="title-block">
@@ -27,9 +23,13 @@
           id="tab-search"
           class="tab-search"
           type="search"
-          label="Search"
+          placeholder="Search"
           aria-label="Search tabs by title or URL"
-        ></md-outlined-text-field>
+        >
+          <svg slot="leading-icon" class="search-icon" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M15.5 14h-.79l-.28-.27a6.5 6.5 0 1 0-.7.7l.27.28v.79l5 4.99L20.49 19zm-6 0A4.5 4.5 0 1 1 14 9.5 4.5 4.5 0 0 1 9.5 14"/>
+          </svg>
+        </md-outlined-text-field>
 
         <div class="toolbar">
           <md-outlined-segmented-button-set class="sort-control" aria-label="Sort tabs">
@@ -38,7 +38,7 @@
             <md-outlined-segmented-button label="Recent" data-sort="recent"></md-outlined-segmented-button>
           </md-outlined-segmented-button-set>
 
-          <md-outlined-button id="return-origin" type="button">Return to origin</md-outlined-button>
+          <md-outlined-button id="return-origin" type="button" hidden>Return to origin</md-outlined-button>
         </div>
       </header>
 

@@ -1,4 +1,11 @@
+@property --tab-eagle-sky-depth {
+  syntax: '<length>';
+  inherits: true;
+  initial-value: 430px;
+}
+
 :root {
+  transition: --tab-eagle-sky-depth 400ms ease;
   color-scheme: light dark;
   --md-ref-typeface-brand: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   --md-ref-typeface-plain: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
@@ -18,14 +25,13 @@
   --md-sys-color-surface-container-highest: #e2e5e9;
   --md-sys-color-outline: #70787f;
   --md-sys-color-outline-variant: #c0c7cf;
-  --tab-eagle-sky: #dff3ff;
-  --tab-eagle-sky-horizon: var(--md-sys-color-surface);
+  --tab-eagle-sky-zenith: color-mix(in srgb, var(--md-sys-color-primary) 30%, var(--md-sys-color-primary-container));
+  --tab-eagle-sky-mid: color-mix(in srgb, var(--md-sys-color-primary-container) 55%, var(--md-sys-color-surface));
+  --tab-eagle-sky-horizon: color-mix(in srgb, var(--md-sys-color-primary-container) 14%, var(--md-sys-color-surface));
   --tab-eagle-sky-depth: 430px;
-  --tab-eagle-cloud: var(--md-sys-color-surface);
-  --tab-eagle-cloud-shadow: var(--md-sys-color-surface-container-high);
-  --md-sys-shape-corner-small: 4px;
-  --md-sys-shape-corner-medium: 6px;
-  --md-sys-shape-corner-large: 8px;
+  --md-sys-shape-corner-small: 8px;
+  --md-sys-shape-corner-medium: 12px;
+  --md-sys-shape-corner-large: 16px;
   --md-sys-elevation-level1: 0 1px 2px rgba(24, 28, 32, 0.08), 0 1px 3px 1px rgba(24, 28, 32, 0.05);
   --md-sys-elevation-level2: 0 1px 2px rgba(24, 28, 32, 0.1), 0 2px 6px 2px rgba(24, 28, 32, 0.07);
   font-family: var(--md-ref-typeface-plain);
@@ -51,10 +57,9 @@
     --md-sys-color-surface-container-highest: #32353a;
     --md-sys-color-outline: #8a9299;
     --md-sys-color-outline-variant: #40484f;
-    --tab-eagle-sky: #0c2332;
-    --tab-eagle-sky-horizon: var(--md-sys-color-surface);
-    --tab-eagle-cloud: var(--md-sys-color-surface-container-highest);
-    --tab-eagle-cloud-shadow: var(--md-sys-color-surface-container);
+    --tab-eagle-sky-zenith: color-mix(in srgb, var(--md-sys-color-primary-container) 48%, var(--md-sys-color-surface));
+    --tab-eagle-sky-mid: color-mix(in srgb, var(--md-sys-color-primary-container) 22%, var(--md-sys-color-surface));
+    --tab-eagle-sky-horizon: color-mix(in srgb, var(--md-sys-color-primary-container) 8%, var(--md-sys-color-surface));
     --md-sys-elevation-level1: 0 1px 2px rgba(0, 0, 0, 0.32), 0 1px 3px 1px rgba(0, 0, 0, 0.24);
     --md-sys-elevation-level2: 0 1px 2px rgba(0, 0, 0, 0.36), 0 2px 6px 2px rgba(0, 0, 0, 0.28);
   }
@@ -82,10 +87,9 @@
   --md-sys-color-surface-container-highest: #32353a;
   --md-sys-color-outline: #8a9299;
   --md-sys-color-outline-variant: #40484f;
-  --tab-eagle-sky: #0c2332;
-  --tab-eagle-sky-horizon: var(--md-sys-color-surface);
-  --tab-eagle-cloud: var(--md-sys-color-surface-container-highest);
-  --tab-eagle-cloud-shadow: var(--md-sys-color-surface-container);
+  --tab-eagle-sky-zenith: color-mix(in srgb, var(--md-sys-color-primary-container) 48%, var(--md-sys-color-surface));
+  --tab-eagle-sky-mid: color-mix(in srgb, var(--md-sys-color-primary-container) 22%, var(--md-sys-color-surface));
+  --tab-eagle-sky-horizon: color-mix(in srgb, var(--md-sys-color-primary-container) 8%, var(--md-sys-color-surface));
   --md-sys-elevation-level1: 0 1px 2px rgba(0, 0, 0, 0.32), 0 1px 3px 1px rgba(0, 0, 0, 0.24);
   --md-sys-elevation-level2: 0 1px 2px rgba(0, 0, 0, 0.36), 0 2px 6px 2px rgba(0, 0, 0, 0.28);
 }
@@ -98,9 +102,7 @@ body {
   margin: 0;
   min-width: 320px;
   min-height: 100vh;
-  background:
-    linear-gradient(180deg, var(--tab-eagle-sky) 0%, var(--tab-eagle-sky-horizon) var(--tab-eagle-sky-depth)),
-    var(--md-sys-color-surface);
+  background: var(--tab-eagle-sky-horizon);
   overflow-x: hidden;
 }
 
@@ -121,88 +123,12 @@ button {
   z-index: 0;
   pointer-events: none;
   overflow: hidden;
-  background:
-    radial-gradient(circle at 22% 12%, color-mix(in srgb, var(--md-sys-color-primary-container) 36%, transparent), transparent 24%),
-    linear-gradient(180deg, var(--tab-eagle-sky) 0%, var(--tab-eagle-sky-horizon) var(--tab-eagle-sky-depth));
-}
-
-.cloud {
-  position: absolute;
-  display: block;
-  width: var(--cloud-width);
-  height: var(--cloud-height);
-  border-radius: 999px;
-  background: color-mix(in srgb, var(--tab-eagle-cloud) 92%, transparent);
-  border: 1px solid color-mix(in srgb, var(--tab-eagle-cloud-shadow) 76%, transparent);
-  opacity: var(--cloud-opacity);
-  filter: blur(0.2px);
-  animation: cloud-drift var(--cloud-duration) ease-in-out infinite alternate;
-}
-
-.cloud::before,
-.cloud::after {
-  content: "";
-  position: absolute;
-  bottom: 28%;
-  border-radius: 50%;
-  background: color-mix(in srgb, var(--tab-eagle-cloud) 94%, transparent);
-}
-
-.cloud::before {
-  left: 18%;
-  width: 34%;
-  height: 86%;
-}
-
-.cloud::after {
-  right: 16%;
-  width: 42%;
-  height: 112%;
-}
-
-.cloud-one {
-  --cloud-width: 260px;
-  --cloud-height: 72px;
-  --cloud-opacity: 0.9;
-  --cloud-duration: 18s;
-  top: 94px;
-  left: max(32px, calc((100vw - 1440px) / 2 + 252px));
-}
-
-.cloud-two {
-  --cloud-width: 300px;
-  --cloud-height: 82px;
-  --cloud-opacity: 0.62;
-  --cloud-duration: 24s;
-  top: 420px;
-  right: max(40px, calc((100vw - 1440px) / 2 + 24px));
-  animation-delay: -8s;
-}
-
-.cloud-three {
-  --cloud-width: 180px;
-  --cloud-height: 54px;
-  --cloud-opacity: 0.54;
-  --cloud-duration: 21s;
-  top: 68vh;
-  left: max(28px, calc((100vw - 1440px) / 2 + 180px));
-  animation-delay: -14s;
-}
-
-@keyframes cloud-drift {
-  from {
-    transform: translate3d(-8px, 0, 0);
-  }
-
-  to {
-    transform: translate3d(10px, -4px, 0);
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .cloud {
-    animation: none;
-  }
+  background: linear-gradient(
+    to bottom in oklab,
+    var(--tab-eagle-sky-zenith),
+    var(--tab-eagle-sky-mid) calc(var(--tab-eagle-sky-depth) * 0.55),
+    var(--tab-eagle-sky-horizon) var(--tab-eagle-sky-depth)
+  );
 }
 
 .top-bar {
@@ -257,9 +183,11 @@ h1 {
 
 .tab-search {
   width: 100%;
-  --md-outlined-text-field-container-shape: 8px;
+  background: color-mix(in srgb, var(--md-sys-color-surface) 72%, transparent);
+  border-radius: 24px;
+  --md-outlined-text-field-container-shape: 24px;
   --md-outlined-text-field-container-height: 48px;
-  --md-outlined-text-field-outline-color: var(--md-sys-color-outline);
+  --md-outlined-text-field-outline-color: var(--md-sys-color-outline-variant);
   --md-outlined-text-field-focus-outline-color: var(--md-sys-color-primary);
   --md-outlined-text-field-input-text-color: var(--md-sys-color-on-surface);
   --md-outlined-text-field-label-text-color: var(--md-sys-color-on-surface-variant);
@@ -283,6 +211,16 @@ h1 {
 
 #return-origin {
   min-width: 168px;
+}
+
+#return-origin[hidden] {
+  display: none;
+}
+
+.search-icon {
+  width: 20px;
+  height: 20px;
+  fill: var(--md-sys-color-on-surface-variant);
 }
 
 .tab-card:focus-visible,
@@ -322,7 +260,7 @@ h1 {
   min-height: 128px;
   padding: 16px;
   border: 1px solid var(--md-sys-color-outline-variant);
-  border-radius: 8px;
+  border-radius: 12px;
 }
 
 .tab-card {
@@ -331,7 +269,7 @@ h1 {
   overflow: hidden;
   cursor: pointer;
   isolation: isolate;
-  box-shadow: none;
+  box-shadow: var(--md-sys-elevation-level1);
   transition:
     background-color 140ms ease,
     border-color 140ms ease,
@@ -351,7 +289,7 @@ h1 {
 .tab-card:hover {
   border-color: var(--md-sys-color-outline);
   background: var(--md-sys-color-surface-container);
-  box-shadow: var(--md-sys-elevation-level1);
+  box-shadow: var(--md-sys-elevation-level2);
 }
 
 .tab-card.is-selected {
@@ -413,7 +351,15 @@ h1 {
   z-index: 2;
   width: 40px;
   height: 40px;
+  opacity: 0.55;
+  transition: opacity 140ms ease;
   color: var(--md-sys-color-on-surface-variant);
+}
+
+.tab-card:hover .close-button,
+.tab-card:focus-within .close-button,
+.tab-card.is-selected .close-button {
+  opacity: 1;
   --md-icon-button-icon-size: 20px;
   --md-icon-button-state-layer-width: 40px;
   --md-icon-button-state-layer-height: 40px;
@@ -464,7 +410,7 @@ h1 {
 }
 
 .favicon {
-  border-radius: 6px;
+  border-radius: 8px;
 }
 
 .favicon-image {
@@ -558,6 +504,21 @@ h1 {
   min-height: 40px;
 }
 
+.reading-list-button.is-idle {
+  opacity: 0;
+  visibility: hidden;
+  transition:
+    opacity 140ms ease,
+    visibility 140ms;
+}
+
+.tab-card:hover .reading-list-button.is-idle,
+.tab-card:focus-within .reading-list-button.is-idle,
+.tab-card.is-selected .reading-list-button.is-idle {
+  opacity: 1;
+  visibility: visible;
+}
+
 .reading-list-button {
   margin-left: -8px;
   --md-text-button-icon-size: 16px;
@@ -621,7 +582,7 @@ h1 {
   min-height: 220px;
   padding: 24px;
   border: 1px solid var(--md-sys-color-outline-variant);
-  border-radius: 8px;
+  border-radius: 12px;
   background: var(--md-sys-color-surface-container-low);
 }
 

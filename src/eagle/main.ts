@@ -8,7 +8,7 @@ import '@material/web/ripple/ripple.js';
 import '@material/web/textfield/outlined-text-field.js';
 import './styles.css';
 
-import type { EagleState, ManagedTab, SortMode } from '../shared/types';
+import type { EagleReopenMessage, EagleState, ManagedTab, SortMode } from '../shared/types';
 import { getEagleBaseUrl, isEagleUrl } from '../shared/urls';
 import { ageBucketForLastAccessed, colorsForAgeBucket, isAgeSortMode, type ThemeMode } from './age-colors';
 import { colorsFromImage, faviconUrlForPageUrl, loadImage, type DomainCardColors } from './domain-colors';
@@ -41,12 +41,19 @@ const domainColorCache = new Map<string, DomainCardColors | null>();
 const domainColorRequests = new Set<string>();
 const colorSchemeQuery = window.matchMedia('(prefers-color-scheme: dark)');
 
+const SKY_DEPTH_CACHE_KEY = 'tabEagleSkyDepth';
+
 const grid = requiredElement<HTMLDivElement>('#tab-grid');
 const tabCount = requiredElement<HTMLParagraphElement>('#tab-count');
 const statusEl = requiredElement<HTMLDivElement>('#status');
 const returnOriginButton = requiredElement<HTMLElement>('#return-origin');
 const searchInput = requiredElement<HTMLElement & { value: string }>('#tab-search');
 const sortButtons = Array.from(document.querySelectorAll<HTMLElement>('[data-sort]'));
+
+// Paint the sky right on the first frame: the cached depth avoids the
+// 430px-default gradient snapping to the real tab count once the
+// async tab query lands.
+applyCachedSkyDepth();
 
 void init();
 
@@ -89,6 +96,25 @@ async function init(): Promise<void> {
   await refreshReadingList();
   await refreshTabs();
 }
+
+function isReopenMessage(message: unknown): message is EagleReopenMessage {
+  if (typeof message !== 'object' || message === null) return false;
+  const candidate = message as Partial<EagleReopenMessage>;
+  return (
+    candidate.type === 'tab-eagle-reopen' &&
+    typeof candidate.sourceTabId === 'number' &&
+    typeof candidate.sourceWindowId === 'number'
+  );
+}
+
+function applyCachedSkyDepth(): void {
+  const cached = Number(localStorage.getItem(SKY_DEPTH_CACHE_KEY));
+
+  if (Number.isFinite(cached) && cached >= MIN_SKY_DEPTH_PX && cached <= MAX_SKY_DEPTH_PX) {
+    document.documentElement.style.setProperty('--tab-eagle-sky-depth', `${cached}px`);
+  }
+}
+
 
 function bindEvents(): void {
   sortButtons.forEach((button) => {
@@ -221,6 +247,18 @@ function bindEvents(): void {
     render();
   });
 
+  chrome.runtime.onMessage.addListener((message: unknown, _sender, sendResponse) => {
+    if (!isReopenMessage(message) || message.sourceWindowId !== state.sourceWindowId) {
+      return;
+    }
+
+    state.originTabId = message.sourceTabId === state.selfTabId ? undefined : message.sourceTabId;
+    setSearchQuery('');
+    window.scrollTo({ top: 0 });
+    void refreshTabs();
+    sendResponse(true);
+  });
+
   if (chrome.readingList) {
     chrome.readingList.onEntryAdded.addListener((entry) => {
       readingListUrls.add(entry.url);
@@ -319,6 +357,7 @@ function render(): void {
   grid.replaceChildren();
   tabCount.textContent = countLabel(visibleTabs.length, orderedTabs.length);
   returnOriginButton.toggleAttribute('disabled', !state.originTabId);
+  returnOriginButton.toggleAttribute('hidden', !state.originTabId);
 
   if (orderedTabs.length === 0) {
     const empty = document.createElement('div');
@@ -367,7 +406,9 @@ function render(): void {
 function updateSkyDepth(tabTotal: number): void {
   const skyDepth = Math.min(MAX_SKY_DEPTH_PX, MIN_SKY_DEPTH_PX + tabTotal * SKY_DEPTH_PER_TAB_PX);
   document.documentElement.style.setProperty('--tab-eagle-sky-depth', `${skyDepth}px`);
+  localStorage.setItem(SKY_DEPTH_CACHE_KEY, String(skyDepth));
 }
+
 
 function createTabCard(tab: ManagedTab): HTMLElement {
   const card = document.createElement('article');
@@ -545,11 +586,12 @@ function bindFaviconFallback(card: HTMLElement): void {
 }
 
 function readingListButton(tab: ManagedTab, label: string, enabled: boolean): string {
-  const ariaLabel = label === 'Read later' ? `Add to Reading List: ${tab.title}` : `${label}: ${tab.title}`;
+  const isIdle = label === 'Read later';
+  const ariaLabel = isIdle ? `Add to Reading List: ${tab.title}` : `${label}: ${tab.title}`;
 
   return `
     <md-text-button
-      class="reading-list-button"
+      class="reading-list-button${isIdle ? ' is-idle' : ''}"
       type="button"
       aria-label="${escapeAttribute(ariaLabel)}"
       ${enabled ? '' : 'disabled'}

@@ -1,3 +1,4 @@
+import type { EagleReopenMessage } from '../shared/types';
 import { createEagleUrl, getEagleBaseUrl, getEagleSourceTabId, isEagleUrl } from '../shared/urls';
 
 async function findExistingEagleTab(windowId: number): Promise<chrome.tabs.Tab | undefined> {
@@ -21,10 +22,17 @@ async function openTabEagle(sourceTab: chrome.tabs.Tab): Promise<void> {
 
   if (existingTab?.id) {
     if (!sourceIsEagle) {
-      await chrome.tabs.update(existingTab.id, {
-        url: createEagleUrl(sourceTab.id, sourceTab.windowId),
-        active: true
-      });
+      // Message the living page instead of re-navigating it: a reload
+      // blanks the tab for a frame, which reads as flicker. Fall back
+      // to navigation only if the page is gone (e.g. discarded).
+      const reopened = await tryReopenExistingEagle(existingTab.id, sourceTab.id, sourceTab.windowId);
+
+      if (!reopened) {
+        await chrome.tabs.update(existingTab.id, {
+          url: createEagleUrl(sourceTab.id, sourceTab.windowId),
+          active: true
+        });
+      }
       return;
     }
 
@@ -42,6 +50,23 @@ async function openTabEagle(sourceTab: chrome.tabs.Tab): Promise<void> {
     url: createEagleUrl(sourceTab.id, sourceTab.windowId),
     active: true
   });
+}
+
+async function tryReopenExistingEagle(
+  eagleTabId: number,
+  sourceTabId: number,
+  sourceWindowId: number
+): Promise<boolean> {
+  try {
+    const message: EagleReopenMessage = { type: 'tab-eagle-reopen', sourceTabId, sourceWindowId };
+    const response: unknown = await chrome.tabs.sendMessage(eagleTabId, message);
+    if (response !== true) return false;
+
+    await chrome.tabs.update(eagleTabId, { active: true });
+    return true;
+  } catch {
+    return false;
+  }
 }
 
 async function hideTabEagle(eagleTab: chrome.tabs.Tab): Promise<void> {
