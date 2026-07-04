@@ -140,11 +140,6 @@ button {
   overflow: hidden;
   background-image:
     var(--tab-eagle-stars),
-    var(--tab-eagle-margin-cloud-left, none),
-    var(--tab-eagle-margin-cloud-right, none),
-    var(--tab-eagle-cloud-a),
-    var(--tab-eagle-cloud-b),
-    var(--tab-eagle-cloud-d),
     linear-gradient(
       to bottom in oklab,
       var(--tab-eagle-sky-zenith),
@@ -154,19 +149,9 @@ button {
   background-repeat: no-repeat;
   background-position:
     right 12px top 80px,
-    left calc((100vw - 1440px) / 4 - 58px) top calc(16% + var(--tab-eagle-drift-dy, 0px)),
-    right calc((100vw - 1440px) / 4 - 84px) top calc(52% + var(--tab-eagle-drift-ey, 0px)),
-    right calc(-50px + var(--tab-eagle-drift-ax, 0px)) bottom calc(-40px + var(--tab-eagle-drift-ay, 0px)),
-    left calc(-60px + var(--tab-eagle-drift-bx, 0px)) bottom -28px,
-    left calc(37% + var(--tab-eagle-drift-cx, 0px)) bottom calc(148px + var(--tab-eagle-drift-cy, 0px)),
     0 0;
   background-size:
     320px auto,
-    116px auto,
-    168px auto,
-    330px auto,
-    210px auto,
-    92px auto,
     auto;
 }
 
@@ -174,20 +159,56 @@ button {
   .sky-background {
     background-position:
       right 4% top 64px,
-      left calc((100vw - 1440px) / 4 - 58px) top calc(16% + var(--tab-eagle-drift-dy, 0px)),
-      right calc((100vw - 1440px) / 4 - 84px) top calc(52% + var(--tab-eagle-drift-ey, 0px)),
-      right calc(-50px + var(--tab-eagle-drift-ax, 0px)) bottom calc(-40px + var(--tab-eagle-drift-ay, 0px)),
-      left calc(-60px + var(--tab-eagle-drift-bx, 0px)) bottom -28px,
-      left calc(37% + var(--tab-eagle-drift-cx, 0px)) bottom calc(148px + var(--tab-eagle-drift-cy, 0px)),
       0 0;
     background-size:
       440px auto,
-      116px auto,
-      168px auto,
-      330px auto,
-      210px auto,
-      92px auto,
       auto;
+  }
+}
+
+/* Cloud layers are separate composited elements so scroll parallax is
+   a transform, not a background repaint. Near clouds ride the scroll
+   hardest, distant ones barely; stars and moon sit at infinity. */
+.sky-layer {
+  position: absolute;
+  inset: 0;
+  background-repeat: no-repeat;
+  will-change: transform;
+}
+
+.sky-layer-far {
+  background-image:
+    var(--tab-eagle-margin-cloud-left, none),
+    var(--tab-eagle-margin-cloud-right, none),
+    var(--tab-eagle-cloud-d);
+  background-position:
+    left calc((100vw - 1440px) / 4 - 58px) top calc(16% + var(--tab-eagle-drift-dy, 0px)),
+    right calc((100vw - 1440px) / 4 - 84px) top calc(52% + var(--tab-eagle-drift-ey, 0px)),
+    left calc(37% + var(--tab-eagle-drift-cx, 0px)) bottom calc(148px + var(--tab-eagle-drift-cy, 0px));
+  background-size:
+    116px auto,
+    168px auto,
+    92px auto;
+  transform: translateY(calc(var(--tab-eagle-scroll, 0px) * -0.06));
+}
+
+.sky-layer-near {
+  background-image:
+    var(--tab-eagle-cloud-a),
+    var(--tab-eagle-cloud-b);
+  background-position:
+    right calc(-50px + var(--tab-eagle-drift-ax, 0px)) bottom calc(-40px + var(--tab-eagle-drift-ay, 0px)),
+    left calc(-60px + var(--tab-eagle-drift-bx, 0px)) bottom -28px;
+  background-size:
+    330px auto,
+    210px auto;
+  transform: translateY(calc(var(--tab-eagle-scroll, 0px) * -0.18));
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sky-layer-far,
+  .sky-layer-near {
+    transform: none;
   }
 }
 

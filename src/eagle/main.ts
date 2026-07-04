@@ -56,9 +56,32 @@ const sortButtons = Array.from(document.querySelectorAll<HTMLElement>('[data-sor
 // tab count once the async tab query lands.
 applySkyDrift();
 applyCachedSkyDepth();
+bindSkyParallax();
 window.setInterval(applySkyDrift, 60_000);
 
 void init();
+
+function bindSkyParallax(): void {
+  let frame: number | undefined;
+
+  const update = () => {
+    document.documentElement.style.setProperty('--tab-eagle-scroll', `${window.scrollY}px`);
+  };
+
+  window.addEventListener(
+    'scroll',
+    () => {
+      if (frame !== undefined) return;
+      frame = requestAnimationFrame(() => {
+        frame = undefined;
+        update();
+      });
+    },
+    { passive: true }
+  );
+
+  update();
+}
 
 function requiredElement<T extends HTMLElement>(selector: string): T {
   const element = document.querySelector<T>(selector);
