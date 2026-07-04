@@ -506,13 +506,17 @@ h1 {
 
 .reading-list-button.is-idle {
   opacity: 0;
-  transition: opacity 140ms ease;
+  visibility: hidden;
+  transition:
+    opacity 140ms ease,
+    visibility 140ms;
 }
 
 .tab-card:hover .reading-list-button.is-idle,
 .tab-card:focus-within .reading-list-button.is-idle,
 .tab-card.is-selected .reading-list-button.is-idle {
   opacity: 1;
+  visibility: visible;
 }
 
 .reading-list-button {
