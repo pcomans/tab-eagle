@@ -18,7 +18,6 @@ import {
   reconcileSelectedTabId,
   type SearchNavigationKey
 } from './search-selection';
-import { skyDriftAt } from './sky-drift';
 import { filterTabsBySearch, nextSortMode, sortTabs, toManagedTab, toReadingListUrl } from './tab-model';
 
 const SORT_STORAGE_KEY = 'sortMode';
@@ -51,37 +50,12 @@ const returnOriginButton = requiredElement<HTMLElement>('#return-origin');
 const searchInput = requiredElement<HTMLElement & { value: string }>('#tab-search');
 const sortButtons = Array.from(document.querySelectorAll<HTMLElement>('[data-sort]'));
 
-// Paint the sky right on the first frame: drift is pure math, and the
-// cached depth avoids the 430px-default gradient snapping to the real
-// tab count once the async tab query lands.
-applySkyDrift();
+// Paint the sky right on the first frame: the cached depth avoids the
+// 430px-default gradient snapping to the real tab count once the
+// async tab query lands.
 applyCachedSkyDepth();
-bindSkyParallax();
-window.setInterval(applySkyDrift, 60_000);
 
 void init();
-
-function bindSkyParallax(): void {
-  let frame: number | undefined;
-
-  const update = () => {
-    document.documentElement.style.setProperty('--tab-eagle-scroll', `${window.scrollY}px`);
-  };
-
-  window.addEventListener(
-    'scroll',
-    () => {
-      if (frame !== undefined) return;
-      frame = requestAnimationFrame(() => {
-        frame = undefined;
-        update();
-      });
-    },
-    { passive: true }
-  );
-
-  update();
-}
 
 function requiredElement<T extends HTMLElement>(selector: string): T {
   const element = document.querySelector<T>(selector);
@@ -141,14 +115,6 @@ function applyCachedSkyDepth(): void {
   }
 }
 
-function applySkyDrift(): void {
-  const drift = skyDriftAt(new Date());
-  const root = document.documentElement.style;
-
-  for (const [key, value] of Object.entries(drift)) {
-    root.setProperty(`--tab-eagle-drift-${key}`, `${value}px`);
-  }
-}
 
 function bindEvents(): void {
   sortButtons.forEach((button) => {
@@ -288,7 +254,6 @@ function bindEvents(): void {
 
     state.originTabId = message.sourceTabId === state.selfTabId ? undefined : message.sourceTabId;
     setSearchQuery('');
-    applySkyDrift();
     window.scrollTo({ top: 0 });
     void refreshTabs();
     sendResponse(true);
@@ -443,6 +408,7 @@ function updateSkyDepth(tabTotal: number): void {
   document.documentElement.style.setProperty('--tab-eagle-sky-depth', `${skyDepth}px`);
   localStorage.setItem(SKY_DEPTH_CACHE_KEY, String(skyDepth));
 }
+
 
 function createTabCard(tab: ManagedTab): HTMLElement {
   const card = document.createElement('article');
