@@ -117,7 +117,7 @@ body {
   margin: 0;
   min-width: 320px;
   min-height: 100vh;
-  background: var(--md-sys-color-surface);
+  background: var(--tab-eagle-sky-horizon);
   overflow-x: hidden;
 }
 
@@ -202,7 +202,9 @@ button {
   background-size:
     330px auto,
     210px auto;
-  transform: translateY(calc(var(--tab-eagle-scroll, 0px) * -0.18));
+  /* Near clouds sink as you scroll (dive) - rising would reveal the
+     cut bottom edge of their corner bleed. */
+  transform: translateY(calc(var(--tab-eagle-scroll, 0px) * 0.1));
 }
 
 @media (prefers-reduced-motion: reduce) {
