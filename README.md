@@ -2,6 +2,9 @@
 
 Tab Eagle is a Chrome Manifest V3 extension that opens a full-tab view of the tabs in the current Chrome window. It lets you sort tabs by position, domain, or recent activity, save tabs to Chrome's Reading List, click a card to activate a tab, and close tabs from the grid. Clicking Recent again toggles between newest-first and oldest-first.
 
+<img width="1178" height="1037" alt="Screenshot 2026-07-07 at 9 20 31 AM" src="https://github.com/user-attachments/assets/3893d4bc-ed67-45d9-b69f-1183d2953a7a" />
+
+
 ## Install For Development
 
 ```sh
