@@ -25,7 +25,6 @@ const MIN_ZOOM = 0.22;
 const MAX_ZOOM = 1.45;
 const DETAIL_FADE_IN_ZOOM = 0.72;
 const DETAIL_FADE_OUT_ZOOM = 0.62;
-const CLOSE_PLACEHOLDER_TIMEOUT_MS = 2200;
 const SEARCH_FIT_PADDING = 72;
 
 type WindowNames = Record<string, string>;
@@ -67,8 +66,6 @@ let dragState: DragState | undefined;
 let hasInitialView = false;
 let windowDetailsVisible = false;
 let searchFitFrame: number | undefined;
-const closingTabPlaceholders = new Map<number, ManagedTab>();
-const closingTabTimers = new Map<number, number>();
 const domainColorCache = new Map<string, DomainCardColors | null>();
 const domainColorRequests = new Set<string>();
 const colorSchemeQuery = window.matchMedia('(prefers-color-scheme: dark)');
@@ -316,18 +313,7 @@ function rebuildOrderedTabs(): void {
 }
 
 function recalculateLayout(): void {
-  currentLayout = reconcileWindowLayout(
-    managedWindows.map((windowItem) => ({ ...windowItem, tabs: displayedTabsForWindow(windowItem) })),
-    currentLayout
-  );
-}
-
-function displayedTabsForWindow(windowItem: ManagedWindow): ManagedTab[] {
-  const existingIds = new Set(windowItem.tabs.map((tab) => tab.id));
-  const placeholders = [...closingTabPlaceholders.values()].filter(
-    (tab) => tab.windowId === windowItem.id && !existingIds.has(tab.id)
-  );
-  return [...windowItem.tabs, ...placeholders];
+  currentLayout = reconcileWindowLayout(managedWindows, currentLayout);
 }
 
 async function setSortMode(sortMode: SortMode): Promise<void> {
@@ -451,7 +437,7 @@ function createWindowCard(
   layoutItem: WindowLayout['items'][number],
   matchingIds: Set<number>
 ): HTMLElement {
-  const orderedWindowTabs = sortTabs(displayedTabsForWindow(windowItem), state.sortMode);
+  const orderedWindowTabs = sortTabs(windowItem.tabs, state.sortMode);
   const matchCount = windowItem.tabs.filter((tab) => matchingIds.has(tab.id)).length;
   const title = windowTitle(windowItem, windowIndex);
   const card = document.createElement('article');
@@ -507,7 +493,6 @@ function createWindowCard(
     event.preventDefault();
     void moveDraggedTab(windowItem.id);
   });
-  card.addEventListener('pointerleave', () => releaseClosingPlaceholders(windowItem.id));
 
   return card;
 }
@@ -901,42 +886,16 @@ async function closeManagedTab(tabId: number): Promise<void> {
   const tab = managedTabs.find((item) => item.id === tabId);
   if (!tab) return;
 
-  closingTabPlaceholders.set(tabId, tab);
   state.pendingTabIds.add(tabId);
   render();
   try {
     await chrome.tabs.remove(tabId);
-    scheduleClosingPlaceholderRelease(tab);
   } catch {
-    releaseClosingPlaceholder(tabId);
     setStatus('That tab was already gone. Refreshing Tab Eagle.');
   } finally {
+    state.pendingTabIds.delete(tabId);
     await refreshTabs();
   }
-}
-
-function scheduleClosingPlaceholderRelease(tab: ManagedTab): void {
-  window.clearTimeout(closingTabTimers.get(tab.id));
-  closingTabTimers.set(
-    tab.id,
-    window.setTimeout(() => releaseClosingPlaceholder(tab.id), CLOSE_PLACEHOLDER_TIMEOUT_MS)
-  );
-}
-
-function releaseClosingPlaceholders(windowId: number): void {
-  const tabIds = [...closingTabPlaceholders.values()]
-    .filter((tab) => tab.windowId === windowId)
-    .map((tab) => tab.id);
-  tabIds.forEach(releaseClosingPlaceholder);
-}
-
-function releaseClosingPlaceholder(tabId: number): void {
-  window.clearTimeout(closingTabTimers.get(tabId));
-  closingTabTimers.delete(tabId);
-  if (!closingTabPlaceholders.delete(tabId)) return;
-  state.pendingTabIds.delete(tabId);
-  recalculateLayout();
-  render();
 }
 
 async function openTab(tabId: number): Promise<void> {
