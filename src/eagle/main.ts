@@ -12,6 +12,7 @@ import './styles.css';
 import type { EagleReopenMessage, EagleState, ManagedTab, ManagedWindow, SortMode } from '../shared/types';
 import { getEagleBaseUrl, isEagleUrl } from '../shared/urls';
 import { ageBucketForLastAccessed, colorsForAgeBucket, isAgeSortMode, type ThemeMode } from './age-colors';
+import { cameraForBounds, type WorldBounds } from './camera-fit';
 import { colorsFromImage, faviconUrlForPageUrl, loadImage, type DomainCardColors } from './domain-colors';
 import { closeIconSvg, readingListIconSvg, statusIconSvg } from './icons';
 import { nextSelectedTabId, reconcileSelectedTabId, type SearchNavigationKey } from './search-selection';
@@ -25,6 +26,7 @@ const MAX_ZOOM = 1.45;
 const DETAIL_FADE_IN_ZOOM = 0.72;
 const DETAIL_FADE_OUT_ZOOM = 0.62;
 const CLOSE_PLACEHOLDER_TIMEOUT_MS = 2200;
+const SEARCH_FIT_PADDING = 72;
 
 type WindowNames = Record<string, string>;
 
@@ -64,6 +66,7 @@ let panAnchor: PanAnchor | undefined;
 let dragState: DragState | undefined;
 let hasInitialView = false;
 let windowDetailsVisible = false;
+let searchFitFrame: number | undefined;
 const closingTabPlaceholders = new Map<number, ManagedTab>();
 const closingTabTimers = new Map<number, number>();
 const domainColorCache = new Map<string, DomainCardColors | null>();
@@ -376,6 +379,70 @@ function render(): void {
   }
 
   renderSearchResults();
+  scheduleSearchResultFit(matchingIds);
+}
+
+function scheduleSearchResultFit(matchingIds: Set<number>): void {
+  window.cancelAnimationFrame(searchFitFrame ?? 0);
+  searchFitFrame = undefined;
+  if (!searchQuery || matchingIds.size === 0) return;
+
+  const scheduledQuery = searchQuery;
+  searchFitFrame = window.requestAnimationFrame(() => {
+    searchFitFrame = undefined;
+    if (searchQuery !== scheduledQuery) return;
+
+    const matchingCards = [...windowMap.querySelectorAll<HTMLElement>('.tab-card')].filter((card) =>
+      matchingIds.has(Number(card.dataset.tabId))
+    );
+    const windowHeaders = new Set(
+      matchingCards
+        .map((card) => card.closest<HTMLElement>('.browser-window')?.querySelector<HTMLElement>('.window-chrome'))
+        .filter((header): header is HTMLElement => Boolean(header))
+    );
+    const bounds = worldBoundsForElements([...matchingCards, ...windowHeaders]);
+    if (!bounds) return;
+
+    const viewportRect = viewport.getBoundingClientRect();
+    view = cameraForBounds(
+      bounds,
+      viewportRect.width,
+      viewportRect.height,
+      SEARCH_FIT_PADDING,
+      MIN_ZOOM,
+      MAX_ZOOM
+    );
+    applyView();
+  });
+}
+
+function worldBoundsForElements(elements: HTMLElement[]): WorldBounds | undefined {
+  const elementBounds = elements
+    .map(boundsWithinWorld)
+    .filter((bounds): bounds is WorldBounds => Boolean(bounds));
+  if (elementBounds.length === 0) return undefined;
+
+  return {
+    left: Math.min(...elementBounds.map((bounds) => bounds.left)),
+    top: Math.min(...elementBounds.map((bounds) => bounds.top)),
+    right: Math.max(...elementBounds.map((bounds) => bounds.right)),
+    bottom: Math.max(...elementBounds.map((bounds) => bounds.bottom))
+  };
+}
+
+function boundsWithinWorld(element: HTMLElement): WorldBounds | undefined {
+  let left = 0;
+  let top = 0;
+  let current: HTMLElement | null = element;
+
+  while (current && current !== world) {
+    left += current.offsetLeft;
+    top += current.offsetTop;
+    current = current.offsetParent as HTMLElement | null;
+  }
+  if (current !== world) return undefined;
+
+  return { left, top, right: left + element.offsetWidth, bottom: top + element.offsetHeight };
 }
 
 function createWindowCard(
