@@ -46,6 +46,38 @@ export function layoutWindows(windows: ManagedWindow[]): WindowLayout {
   };
 }
 
+/**
+ * Refresh the canvas without reassigning surviving windows to new columns.
+ *
+ * Chrome closes a window when its final tab moves elsewhere. Re-running the
+ * masonry layout after that event makes unrelated windows jump into the newly
+ * available space, which breaks the user's spatial orientation. Existing
+ * window IDs therefore keep their coordinates; only genuinely new windows are
+ * assigned a new slot.
+ */
+export function reconcileWindowLayout(windows: ManagedWindow[], previousLayout: WindowLayout): WindowLayout {
+  if (previousLayout.items.length === 0) return layoutWindows(windows);
+  if (windows.length === 0) return layoutWindows(windows);
+
+  const previousItems = new Map(previousLayout.items.map((item) => [item.windowId, item]));
+  const idealItems = new Map(layoutWindows(windows).items.map((item) => [item.windowId, item]));
+  const items: WindowLayoutItem[] = [];
+
+  windows.forEach((windowItem) => {
+    const previous = previousItems.get(windowItem.id);
+    if (previous) {
+      items.push({ ...previous, height: windowCardHeight(windowItem.tabs.length) });
+      return;
+    }
+
+    const ideal = idealItems.get(windowItem.id);
+    if (ideal) items.push(placeNewWindow(ideal, items));
+  });
+
+  preventColumnOverlaps(items);
+  return boundsForItems(items);
+}
+
 export function windowCardHeight(tabCount: number): number {
   const rows = Math.max(1, Math.ceil(tabCount / 2));
   return 116 + rows * 64;
@@ -69,4 +101,39 @@ function indexOfShortestColumn(columnHeights: number[]): number {
     if (columnHeights[index] < columnHeights[shortestIndex]) shortestIndex = index;
   }
   return shortestIndex;
+}
+
+function placeNewWindow(ideal: WindowLayoutItem, existingItems: WindowLayoutItem[]): WindowLayoutItem {
+  if (existingItems.length === 0 || !existingItems.some((item) => item.x === ideal.x)) return ideal;
+
+  const columns = [...new Set(existingItems.map((item) => item.x))];
+  const columnBottoms = columns.map((x) => ({
+    x,
+    bottom: Math.max(...existingItems.filter((item) => item.x === x).map((item) => item.y + item.height))
+  }));
+  const shortestColumn = columnBottoms.reduce((shortest, column) =>
+    column.bottom < shortest.bottom ? column : shortest
+  );
+
+  return { ...ideal, x: shortestColumn.x, y: shortestColumn.bottom + WINDOW_CARD_GAP };
+}
+
+function preventColumnOverlaps(items: WindowLayoutItem[]): void {
+  const columns = [...new Set(items.map((item) => item.x))];
+  columns.forEach((x) => {
+    const columnItems = items.filter((item) => item.x === x).sort((left, right) => left.y - right.y);
+    let nextAvailableY = WORLD_MARGIN;
+    columnItems.forEach((item) => {
+      item.y = Math.max(item.y, nextAvailableY);
+      nextAvailableY = item.y + item.height + WINDOW_CARD_GAP;
+    });
+  });
+}
+
+function boundsForItems(items: WindowLayoutItem[]): WindowLayout {
+  return {
+    items,
+    width: Math.max(WINDOW_CARD_WIDTH + WORLD_MARGIN * 2, ...items.map((item) => item.x + item.width + WORLD_MARGIN)),
+    height: Math.max(520, ...items.map((item) => item.y + item.height + WORLD_MARGIN))
+  };
 }

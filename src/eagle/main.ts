@@ -16,7 +16,7 @@ import { colorsFromImage, faviconUrlForPageUrl, loadImage, type DomainCardColors
 import { closeIconSvg, readingListIconSvg, statusIconSvg } from './icons';
 import { nextSelectedTabId, reconcileSelectedTabId, type SearchNavigationKey } from './search-selection';
 import { filterTabsBySearch, nextSortMode, sortTabs, toManagedTab, toReadingListUrl } from './tab-model';
-import { layoutWindows, moveIndexBefore, type WindowLayout } from './window-layout';
+import { layoutWindows, moveIndexBefore, reconcileWindowLayout, type WindowLayout } from './window-layout';
 
 const SORT_STORAGE_KEY = 'sortMode';
 const WINDOW_NAMES_STORAGE_KEY = 'windowNames';
@@ -313,8 +313,9 @@ function rebuildOrderedTabs(): void {
 }
 
 function recalculateLayout(): void {
-  currentLayout = layoutWindows(
-    managedWindows.map((windowItem) => ({ ...windowItem, tabs: displayedTabsForWindow(windowItem) }))
+  currentLayout = reconcileWindowLayout(
+    managedWindows.map((windowItem) => ({ ...windowItem, tabs: displayedTabsForWindow(windowItem) })),
+    currentLayout
   );
 }
 

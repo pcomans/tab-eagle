@@ -1,6 +1,13 @@
 import { describe, expect, it } from 'vitest';
 import type { ManagedWindow } from '../shared/types';
-import { layoutWindows, moveIndexBefore, WINDOW_CARD_GAP, WINDOW_CARD_WIDTH, WORLD_MARGIN } from './window-layout';
+import {
+  layoutWindows,
+  moveIndexBefore,
+  reconcileWindowLayout,
+  WINDOW_CARD_GAP,
+  WINDOW_CARD_WIDTH,
+  WORLD_MARGIN
+} from './window-layout';
 
 function managedWindow(id: number, tabCount: number): ManagedWindow {
   return {
@@ -39,6 +46,41 @@ describe('layoutWindows', () => {
     const xPositions = new Set(layout.items.map((item) => item.x));
     expect(xPositions.size).toBe(3);
     expect(layout.width).toBe(WORLD_MARGIN * 2 + WINDOW_CARD_WIDTH * 3 + WINDOW_CARD_GAP * 2);
+  });
+});
+
+describe('reconcileWindowLayout', () => {
+  it('does not move surviving windows when another window disappears', () => {
+    const windows = [
+      managedWindow(1, 18),
+      managedWindow(2, 2),
+      managedWindow(3, 2),
+      managedWindow(4, 2),
+      managedWindow(5, 2)
+    ];
+    const previousLayout = layoutWindows(windows);
+    const nextLayout = reconcileWindowLayout(
+      windows.filter((windowItem) => windowItem.id !== 2),
+      previousLayout
+    );
+
+    nextLayout.items.forEach((item) => {
+      const previousItem = previousLayout.items.find((candidate) => candidate.windowId === item.windowId);
+      expect(item).toMatchObject({ x: previousItem?.x, y: previousItem?.y });
+    });
+  });
+
+  it('adds a newly created window without moving existing windows', () => {
+    const existingWindows = [managedWindow(1, 4), managedWindow(2, 4)];
+    const previousLayout = layoutWindows(existingWindows);
+    const nextLayout = reconcileWindowLayout([...existingWindows, managedWindow(3, 4)], previousLayout);
+
+    previousLayout.items.forEach((previousItem) => {
+      expect(nextLayout.items.find((item) => item.windowId === previousItem.windowId)).toMatchObject({
+        x: previousItem.x,
+        y: previousItem.y
+      });
+    });
   });
 });
 
