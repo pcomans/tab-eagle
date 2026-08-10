@@ -1043,8 +1043,7 @@ function countLabel(visibleCount: number, totalCount: number, windowCount: numbe
 
 function sortModeLabel(sortMode: SortMode): string {
   if (sortMode === 'domain') return 'Sorted by domain';
-  if (sortMode === 'recent') return 'Newest activity first';
-  if (sortMode === 'leastRecent') return 'Oldest activity first';
+  if (sortMode === 'recent' || sortMode === 'leastRecent') return 'Sorted by tab age';
   return 'Chrome tab order';
 }
 
