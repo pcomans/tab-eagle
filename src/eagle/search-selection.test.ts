@@ -60,4 +60,13 @@ describe('nextSelectedTabId', () => {
   it('starts navigation from the first result when nothing is selected', () => {
     expect(nextSelectedTabId(tabs, undefined, 'ArrowRight', 3)).toBe(2);
   });
+
+  it('keeps duplicate-looking results distinct by tab ID', () => {
+    const duplicateTabs = [
+      { ...tab(10), title: 'Italy Trip', domain: 'example.com' },
+      { ...tab(11), title: 'Italy Trip', domain: 'example.com' }
+    ];
+
+    expect(nextSelectedTabId(duplicateTabs, 10, 'ArrowDown', 1)).toBe(11);
+  });
 });

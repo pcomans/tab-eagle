@@ -386,20 +386,37 @@ function scheduleSearchResultFit(matchingIds: Set<number>): void {
         .map((card) => card.closest<HTMLElement>('.browser-window')?.querySelector<HTMLElement>('.window-chrome'))
         .filter((header): header is HTMLElement => Boolean(header))
     );
-    const bounds = worldBoundsForElements([...matchingCards, ...windowHeaders]);
-    if (!bounds) return;
-
-    const viewportRect = viewport.getBoundingClientRect();
-    view = cameraForBounds(
-      bounds,
-      viewportRect.width,
-      viewportRect.height,
-      SEARCH_FIT_PADDING,
-      MIN_ZOOM,
-      MAX_ZOOM
-    );
-    applyView();
+    frameElementsInCamera([...matchingCards, ...windowHeaders]);
   });
+}
+
+function scheduleSelectedTabFit(tabId: number): void {
+  window.cancelAnimationFrame(searchFitFrame ?? 0);
+  searchFitFrame = window.requestAnimationFrame(() => {
+    searchFitFrame = undefined;
+    if (!searchQuery || selectedTabId !== tabId) return;
+
+    const card = windowMap.querySelector<HTMLElement>(`.tab-card[data-tab-id="${tabId}"]`);
+    if (!card) return;
+    const header = card.closest<HTMLElement>('.browser-window')?.querySelector<HTMLElement>('.window-chrome');
+    frameElementsInCamera(header ? [card, header] : [card]);
+  });
+}
+
+function frameElementsInCamera(elements: HTMLElement[]): void {
+  const bounds = worldBoundsForElements(elements);
+  if (!bounds) return;
+
+  const viewportRect = viewport.getBoundingClientRect();
+  view = cameraForBounds(
+    bounds,
+    viewportRect.width,
+    viewportRect.height,
+    SEARCH_FIT_PADDING,
+    MIN_ZOOM,
+    MAX_ZOOM
+  );
+  applyView();
 }
 
 function worldBoundsForElements(elements: HTMLElement[]): WorldBounds | undefined {
@@ -805,6 +822,7 @@ function moveSelection(key: SearchNavigationKey): void {
   updateSelectedCardAttributes();
   updateSelectedSearchResultAttributes();
   scrollSelectedSearchResultIntoView();
+  scheduleSelectedTabFit(nextTabId);
 }
 
 function setSearchQuery(query: string): void {
