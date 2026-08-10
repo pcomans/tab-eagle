@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" data-detail-level="overview">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -8,42 +8,62 @@
   </head>
   <body>
     <main class="app-shell">
-      <div class="sky-background" aria-hidden="true"></div>
-
       <header class="top-bar">
-        <div class="title-block">
-          <h1>
-            <span>Tab Eagle</span>
-            <img class="title-logo" src="/icons/icon128.png" alt="" aria-hidden="true" />
-          </h1>
-          <p id="tab-count">Loading tabs...</p>
+        <button id="fit-brand" class="brand" type="button" aria-label="Fit all Chrome windows">
+          <img class="title-logo" src="/icons/icon128.png" alt="" aria-hidden="true" />
+          <span><strong>Tab Eagle</strong><small>All your windows</small></span>
+        </button>
+
+        <div class="search-wrap">
+          <md-outlined-text-field
+            id="tab-search"
+            class="tab-search"
+            type="search"
+            placeholder="Search every open tab"
+            aria-label="Search tabs across every Chrome window"
+          >
+            <svg slot="leading-icon" class="search-icon" viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M15.5 14h-.79l-.28-.27a6.5 6.5 0 1 0-.7.7l.27.28v.79l5 4.99L20.49 19zm-6 0A4.5 4.5 0 1 1 14 9.5 4.5 4.5 0 0 1 9.5 14"/>
+            </svg>
+          </md-outlined-text-field>
+          <div id="search-results" class="search-results" hidden></div>
         </div>
 
-        <md-outlined-text-field
-          id="tab-search"
-          class="tab-search"
-          type="search"
-          placeholder="Search"
-          aria-label="Search tabs by title or URL"
-        >
-          <svg slot="leading-icon" class="search-icon" viewBox="0 0 24 24" aria-hidden="true">
-            <path d="M15.5 14h-.79l-.28-.27a6.5 6.5 0 1 0-.7.7l.27.28v.79l5 4.99L20.49 19zm-6 0A4.5 4.5 0 1 1 14 9.5 4.5 4.5 0 0 1 9.5 14"/>
-          </svg>
-        </md-outlined-text-field>
-
         <div class="toolbar">
-          <md-outlined-segmented-button-set class="sort-control" aria-label="Sort tabs">
+          <md-outlined-segmented-button-set class="sort-control" aria-label="Sort tabs inside each window">
             <md-outlined-segmented-button label="Position" data-sort="position" selected></md-outlined-segmented-button>
             <md-outlined-segmented-button label="Domain" data-sort="domain"></md-outlined-segmented-button>
             <md-outlined-segmented-button label="Recent" data-sort="recent"></md-outlined-segmented-button>
           </md-outlined-segmented-button-set>
-
           <md-outlined-button id="return-origin" type="button" hidden>Return to origin</md-outlined-button>
+          <span id="tab-count" class="total-count">Loading tabs…</span>
         </div>
       </header>
 
-      <section id="status" class="status" role="status" aria-live="polite"></section>
-      <section id="tab-grid" class="tab-grid" role="grid" aria-label="Tabs"></section>
+      <section id="viewport" class="viewport" aria-label="Zoomable map of Chrome windows">
+        <div id="sky-hint" class="sky-hint">Same windows and tabs at every scale · scroll to zoom</div>
+        <div id="world" class="world">
+          <div class="horizon-ring ring-one" aria-hidden="true"></div>
+          <div class="horizon-ring ring-two" aria-hidden="true"></div>
+          <section id="window-map" class="window-map" aria-label="Chrome windows"></section>
+        </div>
+
+        <div id="drag-banner" class="drag-banner" aria-live="polite" hidden>
+          <span class="drag-symbol">↗</span>
+          <span><strong id="drag-title"></strong><small>Drop onto a window or between two tabs</small></span>
+        </div>
+
+        <div class="zoom-control" aria-label="Zoom controls">
+          <md-icon-button id="zoom-out" type="button" aria-label="Zoom out">−</md-icon-button>
+          <md-slider id="zoom-slider" min="0.22" max="1.45" step="0.01" value="0.6" aria-label="Zoom level"></md-slider>
+          <md-icon-button id="zoom-in" type="button" aria-label="Zoom in">+</md-icon-button>
+          <md-text-button id="fit-all" type="button">Fit</md-text-button>
+          <span id="zoom-label">60%</span>
+        </div>
+
+        <div id="overview-stats" class="overview-stats"></div>
+        <div id="status" class="status" role="status" aria-live="polite"></div>
+      </section>
     </main>
   </body>
 </html>

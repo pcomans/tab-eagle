@@ -70,7 +70,8 @@ export function toManagedTab(tab: chrome.tabs.Tab): ManagedTab | null {
     status: tab.status,
     discarded: Boolean(tab.discarded),
     frozen: tab.frozen,
-    lastAccessed: tab.lastAccessed
+    lastAccessed: tab.lastAccessed,
+    active: Boolean(tab.active)
   };
 }
 

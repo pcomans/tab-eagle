@@ -16,6 +16,14 @@ export interface ManagedTab {
   discarded: boolean;
   frozen?: boolean;
   lastAccessed?: number;
+  active?: boolean;
+}
+
+export interface ManagedWindow {
+  id: number;
+  focused: boolean;
+  incognito: boolean;
+  tabs: ManagedTab[];
 }
 
 export interface EagleReopenMessage {

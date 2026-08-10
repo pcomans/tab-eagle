@@ -24,21 +24,22 @@ Tab Eagle
 
 ### Short Description
 
-A bird's-eye view of your Chrome tabs.
+A zoomable bird's-eye view of tabs across your Chrome windows.
 
 ### Detailed Description
 
-Tab Eagle gives you a fast full-screen overview of the tabs in your current Chrome window.
+Tab Eagle gives you a fast full-screen map of the tabs across all your normal Chrome windows. It opens centered on the window you came from, then lets you zoom out to see the complete browser.
 
-Search by title or URL, sort tabs by position, domain, or recent activity, jump directly to a tab, close tabs from the grid, and add eligible pages to Chrome's built-in Reading List.
+Search across windows by title or URL, drag tabs between windows, sort each window by position, domain, or recent activity, jump directly to a tab, close tabs from the map, and add eligible pages to Chrome's built-in Reading List.
 
 Tab Eagle is built for people who keep many tabs open and need a calmer way to find, triage, and clean them up. It does not request access to all data on all websites, does not use host permissions, and does not send your tab data to any developer-operated server.
 
 Key features:
 
-- Full-screen tab overview
-- Type-to-search by tab title or URL
-- Sorting by tab position, domain, newest used, or oldest used
+- Zoomable multi-window tab map
+- Cross-window type-to-search by tab title or URL
+- Drag and drop tabs within or between windows
+- Sorting inside each window by tab position, domain, newest used, or oldest used
 - Visual color treatments for domain and recent-activity sorting
 - Click a tab card to activate that tab
 - Close tabs directly from the overview
@@ -71,17 +72,17 @@ https://github.com/pcomans/tab-eagle/blob/main/PRIVACY.md
 
 ### Single Purpose
 
-Tab Eagle provides a full-screen overview for searching, sorting, opening, closing, and saving Chrome tabs.
+Tab Eagle provides a full-screen multi-window map for searching, sorting, moving, opening, closing, and saving Chrome tabs.
 
 ### Permission Justifications
 
 `tabs`
 
-Required to list, activate, close, and read metadata for tabs in the current Chrome window.
+Required to list, move, activate, close, and read metadata for tabs across the user's Chrome windows.
 
 `storage`
 
-Required to save the user's preferred sort mode locally.
+Required to save the user's preferred sort mode locally and session window labels in extension session storage.
 
 `readingList`
 
@@ -101,7 +102,7 @@ Tab Eagle processes tab titles, URLs, pending URLs, favicons, tab metadata, last
 
 Tab Eagle does not sell, rent, share, transfer, or transmit this data to any developer-operated server.
 
-Tab Eagle stores only the user's preferred sort mode in local Chrome extension storage.
+Tab Eagle stores the user's preferred sort mode in local Chrome extension storage and user-created window labels in session storage. Session labels clear when Chrome restarts.
 
 ### Limited Use Certification
 
@@ -119,17 +120,18 @@ No in-app purchases.
 
 ## Reviewer Test Instructions
 
-Click the extension action or press Command+Shift+E. Tab Eagle opens a full-screen tab overview for the current Chrome window.
+Click the extension action or press Command+Shift+E. Tab Eagle opens a full-screen map centered on the current Chrome window.
 
 Test flow:
 
-1. Type in the search field or type directly on the page to filter tabs by title or URL.
-2. Click Position, Domain, or Recent to change the sort order.
-3. Click Recent again to toggle newest-first and oldest-first.
-4. Click a tab card to activate that tab.
-5. Click X on a tab card to close that tab.
-6. Click Read later on an eligible tab to add it to Chrome Reading List.
-7. Click Return to origin to return to the tab that opened Tab Eagle.
+1. Scroll or use the zoom controls to move between the invoking window and the all-window overview.
+2. Type in the search field or type directly on the page to highlight matching tabs across windows.
+3. Drag a tab onto another window or between two tabs.
+4. Click a window title to save a session label.
+5. Click Position, Domain, or Recent to change the ordering inside every window.
+6. Click Recent again to toggle newest-first and oldest-first.
+7. Zoom into a window, then click a tab card to activate it or use its close and Reading List actions.
+8. Click Return to origin to return to the tab that opened Tab Eagle.
 
 Expected behavior:
 
