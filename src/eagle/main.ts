@@ -686,7 +686,7 @@ function clearDragState(): void {
   dragState = undefined;
   document.body.classList.remove('is-dragging');
   dragBanner.hidden = true;
-  skyHint.textContent = 'Same windows and tabs at every scale · scroll to zoom';
+  skyHint.textContent = 'Scroll to zoom · drag the background to pan';
   windowMap.querySelectorAll('.is-drop-target, .drop-before, .is-drag-source').forEach((element) => element.classList.remove('is-drop-target', 'drop-before', 'is-drag-source'));
 }
 
