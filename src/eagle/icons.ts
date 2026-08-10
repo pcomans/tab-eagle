@@ -1,6 +1,6 @@
 export function closeIconSvg(): string {
   return `
-    <svg class="material-icon" viewBox="0 -960 960 960" aria-hidden="true" focusable="false">
+    <svg class="material-icon" slot="icon" viewBox="0 -960 960 960" aria-hidden="true" focusable="false">
       <path d="m256-200-56-56 224-224-224-224 56-56 224 224 224-224 56 56-224 224 224 224-56 56-224-224-224 224Z"/>
     </svg>
   `;
