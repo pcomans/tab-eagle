@@ -716,11 +716,11 @@ function beginWindowRename(windowItem: ManagedWindow, windowIndex: number, card:
   };
 
   field.addEventListener('keydown', (event) => {
-    if (event.key === 'Enter') field.blur();
-    if (event.key === 'Escape') {
-      cancelled = true;
-      field.blur();
-    }
+    if (event.key !== 'Enter' && event.key !== 'Escape') return;
+    event.preventDefault();
+    event.stopPropagation();
+    if (event.key === 'Escape') cancelled = true;
+    field.blur();
   });
   field.addEventListener('blur', () => void finish(), { once: true });
   window.requestAnimationFrame(() => field.focus());
@@ -1125,7 +1125,7 @@ function isEditableTarget(target: EventTarget | null): boolean {
 function isCommandTarget(target: EventTarget | null): boolean {
   if (!(target instanceof HTMLElement)) return false;
   if (target === searchInput) return false;
-  return Boolean(target.closest('button, md-icon-button, md-text-button, md-outlined-button, md-filled-button, md-outlined-segmented-button, md-slider'));
+  return Boolean(target.closest('button, md-icon-button, md-text-button, md-outlined-button, md-filled-button, md-outlined-segmented-button, md-outlined-text-field, md-slider'));
 }
 
 function numberFromParam(value: string | null): number | undefined {
