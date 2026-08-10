@@ -4,6 +4,10 @@ export default defineConfig({
   publicDir: 'public',
   build: {
     emptyOutDir: true,
+    // Chrome extension pages execute preloads and modules in separate worlds,
+    // so Vite's generated modulepreload cannot be reused and produces a noisy
+    // cross-world mismatch warning. The normal ESM import still loads chunks.
+    modulePreload: false,
     rollupOptions: {
       input: {
         eagle: 'src/eagle/index.html',
