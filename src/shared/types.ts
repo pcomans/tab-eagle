@@ -8,14 +8,18 @@ export interface ManagedTab {
   pendingUrl?: string;
   domain: string;
   title: string;
-  favIconUrl?: string;
   pinned: boolean;
   audible: boolean;
   muted: boolean;
-  status?: chrome.tabs.Tab['status'];
-  discarded: boolean;
-  frozen?: boolean;
   lastAccessed?: number;
+  active?: boolean;
+}
+
+export interface ManagedWindow {
+  id: number;
+  focused: boolean;
+  incognito: boolean;
+  tabs: ManagedTab[];
 }
 
 export interface EagleReopenMessage {

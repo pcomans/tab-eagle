@@ -5,9 +5,9 @@ import {
   nextSortMode,
   normalizeDomain,
   normalizeSearchText,
+  remapTabId,
   sortTabs,
-  toReadingListUrl,
-  toRenderableFaviconUrl
+  toReadingListUrl
 } from './tab-model';
 
 function tab(id: number, index: number, domain: string, lastAccessed?: number): ManagedTab {
@@ -20,7 +20,6 @@ function tab(id: number, index: number, domain: string, lastAccessed?: number): 
     pinned: false,
     audible: false,
     muted: false,
-    discarded: false,
     lastAccessed
   };
 }
@@ -33,20 +32,6 @@ describe('normalizeDomain', () => {
   it('falls back to stable labels for non-web URLs', () => {
     expect(normalizeDomain('chrome://extensions')).toBe('chrome');
     expect(normalizeDomain('file:///tmp/test.html')).toBe('file');
-  });
-});
-
-describe('toRenderableFaviconUrl', () => {
-  it('keeps favicon URLs the extension page can render', () => {
-    expect(toRenderableFaviconUrl('https://example.com/icon.png')).toBe('https://example.com/icon.png');
-    expect(toRenderableFaviconUrl('data:image/png;base64,abc')).toBe('data:image/png;base64,abc');
-    expect(toRenderableFaviconUrl('chrome-extension://extension-id/icon.png')).toBe(
-      'chrome-extension://extension-id/icon.png'
-    );
-  });
-
-  it('drops local file favicon URLs', () => {
-    expect(toRenderableFaviconUrl('file:///Users/philipp/project/icon.png')).toBeUndefined();
   });
 });
 
@@ -132,5 +117,13 @@ describe('nextSortMode', () => {
   it('does not toggle position or domain when clicked repeatedly', () => {
     expect(nextSortMode('position', 'position')).toBe('position');
     expect(nextSortMode('domain', 'domain')).toBe('domain');
+  });
+});
+
+describe('remapTabId', () => {
+  it('follows a replaced origin tab and leaves other IDs unchanged', () => {
+    expect(remapTabId(10, 20, 10)).toBe(20);
+    expect(remapTabId(9, 20, 10)).toBe(9);
+    expect(remapTabId(undefined, 20, 10)).toBeUndefined();
   });
 });

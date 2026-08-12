@@ -47,9 +47,15 @@ jobs:
         run: |
           PACKAGE_VERSION="$(node -p "require('./package.json').version")"
           MANIFEST_VERSION="$(node -p "require('./public/manifest.json').version")"
+          LOCK_VERSION="$(node -p "require('./package-lock.json').packages[''].version")"
 
           if [ "$PACKAGE_VERSION" != "$MANIFEST_VERSION" ]; then
             echo "package.json version ($PACKAGE_VERSION) must match manifest version ($MANIFEST_VERSION)."
+            exit 1
+          fi
+
+          if [ "$PACKAGE_VERSION" != "$LOCK_VERSION" ]; then
+            echo "package.json version ($PACKAGE_VERSION) must match package-lock.json version ($LOCK_VERSION)."
             exit 1
           fi
 

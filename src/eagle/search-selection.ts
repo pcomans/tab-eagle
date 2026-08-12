@@ -2,6 +2,16 @@ import type { ManagedTab } from '../shared/types';
 
 export type SearchNavigationKey = 'ArrowLeft' | 'ArrowRight' | 'ArrowUp' | 'ArrowDown';
 
+export function navigationColumnCount(
+  key: SearchNavigationKey,
+  fromSearchField: boolean,
+  hasModifier: boolean
+): number | undefined {
+  if (hasModifier) return undefined;
+  if (!fromSearchField) return 2;
+  return key === 'ArrowUp' || key === 'ArrowDown' ? 1 : undefined;
+}
+
 export function firstVisibleTabId(tabs: ManagedTab[]): number | undefined {
   return tabs[0]?.id;
 }

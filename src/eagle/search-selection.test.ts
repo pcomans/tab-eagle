@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { ManagedTab } from '../shared/types';
-import { firstVisibleTabId, nextSelectedTabId, reconcileSelectedTabId } from './search-selection';
+import { firstVisibleTabId, navigationColumnCount, nextSelectedTabId, reconcileSelectedTabId } from './search-selection';
 
 function tab(id: number): ManagedTab {
   return {
@@ -11,12 +11,27 @@ function tab(id: number): ManagedTab {
     title: `Tab ${id}`,
     pinned: false,
     audible: false,
-    muted: false,
-    discarded: false
+    muted: false
   };
 }
 
 const tabs = [tab(1), tab(2), tab(3), tab(4), tab(5), tab(6)];
+
+describe('navigationColumnCount', () => {
+  it('keeps horizontal arrows available for editing the search field', () => {
+    expect(navigationColumnCount('ArrowLeft', true, false)).toBeUndefined();
+    expect(navigationColumnCount('ArrowRight', true, false)).toBeUndefined();
+  });
+
+  it('uses a vertical list in search and a two-column canvas elsewhere', () => {
+    expect(navigationColumnCount('ArrowDown', true, false)).toBe(1);
+    expect(navigationColumnCount('ArrowDown', false, false)).toBe(2);
+  });
+
+  it('does not intercept modified arrow keys', () => {
+    expect(navigationColumnCount('ArrowDown', true, true)).toBeUndefined();
+  });
+});
 
 describe('firstVisibleTabId', () => {
   it('selects the first visible tab by default', () => {
@@ -59,5 +74,21 @@ describe('nextSelectedTabId', () => {
 
   it('starts navigation from the first result when nothing is selected', () => {
     expect(nextSelectedTabId(tabs, undefined, 'ArrowRight', 3)).toBe(2);
+  });
+
+  it('keeps duplicate-looking results distinct by tab ID', () => {
+    const duplicateTabs = [
+      { ...tab(10), title: 'Italy Trip', domain: 'example.com' },
+      { ...tab(11), title: 'Italy Trip', domain: 'example.com' }
+    ];
+
+    expect(nextSelectedTabId(duplicateTabs, 10, 'ArrowDown', 1)).toBe(11);
+  });
+
+  it('continues through results beyond the eighth item', () => {
+    const manyTabs = Array.from({ length: 10 }, (_, index) => tab(index + 1));
+
+    expect(nextSelectedTabId(manyTabs, 8, 'ArrowDown', 1)).toBe(9);
+    expect(nextSelectedTabId(manyTabs, 9, 'ArrowDown', 1)).toBe(10);
   });
 });

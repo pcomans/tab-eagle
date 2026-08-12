@@ -12,6 +12,21 @@ export function createEagleUrl(sourceTabId: number, sourceWindowId: number): str
   return url.toString();
 }
 
+export function updateEagleSourceUrl(
+  tabUrl: string,
+  sourceTabId: number | undefined,
+  sourceWindowId: number
+): string {
+  const url = new URL(tabUrl);
+  if (typeof sourceTabId === 'number') {
+    url.searchParams.set('sourceTabId', String(sourceTabId));
+  } else {
+    url.searchParams.delete('sourceTabId');
+  }
+  url.searchParams.set('sourceWindowId', String(sourceWindowId));
+  return url.toString();
+}
+
 export function isEagleUrl(tabUrl: string | undefined, eagleBaseUrl = getEagleBaseUrl()): boolean {
   if (!tabUrl) return false;
   return tabUrl === eagleBaseUrl || tabUrl.startsWith(`${eagleBaseUrl}?`);
