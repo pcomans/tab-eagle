@@ -26,7 +26,7 @@
 
 12. As a user, when I close a tab from Tab Eagle, I want Tab Eagle to stay active so I can continue managing tabs without an unexpected browser-level tab switch.
 
-13. As a user, I want a closing tab to become unavailable immediately while its card position remains reserved until I move the pointer away, so the interface stays accurate without moving another close button underneath me.
+13. As a user, I want a closed tab to disappear immediately and the next tab to take its place so Tab Eagle reflects Chrome without a noticeable delay.
 
 14. As a user, I want tab cards to use stable sizing and close-button placement so I can close multiple tabs quickly without chasing the X.
 
@@ -46,7 +46,7 @@
 
 22. As a user, I want to use the arrow keys to move the highlight through visible search results so I can select a result without leaving the keyboard.
 
-23. As a user, when arrow-key navigation moves the highlight through cross-window search results, I want the selected result to remain visible so I can always see my current keyboard target.
+23. As a user, when arrow-key navigation moves the highlight through cross-window search results, I want the camera to pan and zoom to the selected tab—even when several results are duplicate pages—so I can always see my current keyboard target.
 
 24. As a user, I want to press Enter to activate the highlighted tab while leaving the Tab Eagle tab open so keyboard opening behaves like clicking a tab card.
 
@@ -84,13 +84,25 @@
 
 41. As a user, I want Position, Domain, and Recent sorting to apply independently inside each window so sorting never breaks real window membership.
 
-42. As a user, I want to drag a tab within or between windows and choose its drop position so I can consolidate and reorder tabs directly from the map.
+42. As a user, I want to drag a tab within a window, between existing windows, or into a new window so I can consolidate and reorganize tabs directly from the map.
 
 43. As a user, I want to give a window a session label so I can recognize its purpose without changing its tabs.
 
+44. As a user, I want every Tab Eagle instance to use the same window order and canvas positions for the current Chrome session so the map does not change depending on which window invoked it.
+
+45. As a user, when moving the final tab closes its old Chrome window, I want the remaining window cards to stay where they are so I do not become disoriented.
+
+46. As a user, I want a newly created Chrome window to appear in the position previewed by the drop target so creating it does not unexpectedly rearrange the canvas.
+
+47. As a user, I want overview scale to enlarge tab and window titles, hide secondary details and Reading List controls, and retain the close button so the map remains readable and useful when zoomed out.
+
+48. As a user, I want the invoking window to be marked as current so I can distinguish it from the stable global window arrangement.
+
+49. As a user using assistive technology, I want keyboard search navigation to announce the selected tab, window, and result position so I can understand selection without relying on the visual highlight.
+
 ## Upcoming
 
-1. As a user, I want tab cards to show useful tab state such as audible, muted, loading, discarded, frozen, or grouped so I can understand which tabs need attention.
+1. As a user, I want tab cards to show useful additional tab state such as loading, discarded, frozen, or grouped so I can understand which tabs need attention.
 
 2. As a user, I want to filter tabs by state such as audible, pinned, muted, unloaded, or grouped so I can quickly find tabs with a specific behavior.
 
