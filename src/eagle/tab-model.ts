@@ -25,17 +25,6 @@ export function normalizeDomain(rawUrl: string | undefined): string {
   }
 }
 
-export function toRenderableFaviconUrl(rawUrl: string | undefined): string | undefined {
-  if (!rawUrl) return undefined;
-
-  try {
-    const url = new URL(rawUrl);
-    return ['http:', 'https:', 'data:', 'chrome-extension:'].includes(url.protocol) ? rawUrl : undefined;
-  } catch {
-    return undefined;
-  }
-}
-
 export function toReadingListUrl(tab: Pick<ManagedTab, 'url' | 'pendingUrl'>): string | undefined {
   const rawUrl = tab.url ?? tab.pendingUrl;
   if (!rawUrl) return undefined;
@@ -63,16 +52,16 @@ export function toManagedTab(tab: chrome.tabs.Tab): ManagedTab | null {
     pendingUrl: tab.pendingUrl,
     domain: normalizeDomain(url),
     title: tab.title?.trim() || url || 'Untitled tab',
-    favIconUrl: toRenderableFaviconUrl(tab.favIconUrl),
     pinned: Boolean(tab.pinned),
     audible: Boolean(tab.audible),
     muted: Boolean(tab.mutedInfo?.muted),
-    status: tab.status,
-    discarded: Boolean(tab.discarded),
-    frozen: tab.frozen,
     lastAccessed: tab.lastAccessed,
     active: Boolean(tab.active)
   };
+}
+
+export function remapTabId(currentTabId: number | undefined, addedTabId: number, removedTabId: number): number | undefined {
+  return currentTabId === removedTabId ? addedTabId : currentTabId;
 }
 
 export function sortTabs(tabs: ManagedTab[], sortMode: SortMode): ManagedTab[] {

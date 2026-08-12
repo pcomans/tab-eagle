@@ -10,29 +10,51 @@ import '@material/web/textfield/outlined-text-field.js';
 import './styles.css';
 
 import type { EagleReopenMessage, EagleState, ManagedTab, ManagedWindow, SortMode } from '../shared/types';
-import { getEagleBaseUrl, isEagleUrl } from '../shared/urls';
+import { getEagleBaseUrl, isEagleUrl, updateEagleSourceUrl } from '../shared/urls';
 import { ageBucketForLastAccessed, colorsForAgeBucket, isAgeSortMode, type ThemeMode } from './age-colors';
-import { cameraForBounds, type WorldBounds } from './camera-fit';
-import { colorsFromImage, faviconUrlForPageUrl, loadImage, type DomainCardColors } from './domain-colors';
+import {
+  cameraForBounds,
+  cameraForResize,
+  detailVisibilityForZoom,
+  easeOutCubic,
+  interpolateCameraView,
+  zoomAboutPoint,
+  type CameraView,
+  type WorldBounds
+} from './camera';
+import { colorsFromImage, faviconUrlForTab, loadImage, type DomainCardColors } from './domain-colors';
 import { closeIconSvg, readingListIconSvg, statusIconSvg } from './icons';
-import { nextSelectedTabId, reconcileSelectedTabId, type SearchNavigationKey } from './search-selection';
-import { filterTabsBySearch, nextSortMode, sortTabs, toManagedTab, toReadingListUrl } from './tab-model';
-import { layoutWindows, moveIndexBefore, reconcileWindowLayout, type WindowLayout } from './window-layout';
+import { navigationColumnCount, nextSelectedTabId, reconcileSelectedTabId, type SearchNavigationKey } from './search-selection';
+import { filterTabsBySearch, nextSortMode, remapTabId, sortTabs, toManagedTab, toReadingListUrl } from './tab-model';
+import {
+  layoutWindows,
+  moveIndexBefore,
+  reconcileWindowLayout,
+  replaceWindowIdInLayout,
+  sortWindowsById,
+  windowLayoutsEqual,
+  type WindowLayout,
+  type WindowLayoutItem
+} from './window-layout';
 
 const SORT_STORAGE_KEY = 'sortMode';
 const WINDOW_NAMES_STORAGE_KEY = 'windowNames';
+const WINDOW_LAYOUT_STORAGE_KEY = 'windowLayout';
 const MIN_ZOOM = 0.22;
 const MAX_ZOOM = 1.45;
 const DETAIL_FADE_IN_ZOOM = 0.72;
 const DETAIL_FADE_OUT_ZOOM = 0.62;
 const SEARCH_FIT_PADDING = 72;
+const CAMERA_ANIMATION_DURATION_MS = 420;
+const NEW_WINDOW_PREVIEW_ID = -1;
 
 type WindowNames = Record<string, string>;
 
-interface ViewState {
-  zoom: number;
-  panX: number;
-  panY: number;
+interface ViewportBounds {
+  left: number;
+  top: number;
+  width: number;
+  height: number;
 }
 
 interface PanAnchor {
@@ -44,9 +66,6 @@ interface PanAnchor {
 
 interface DragState {
   tabId: number;
-  sourceWindowId: number;
-  overWindowId?: number;
-  beforeTabId?: number;
 }
 
 let state: EagleState;
@@ -57,23 +76,30 @@ let windowNames: WindowNames = {};
 let currentLayout: WindowLayout = layoutWindows([]);
 let searchQuery = '';
 let refreshTimer: number | undefined;
+let refreshRequestId = 0;
 let selectedTabId: number | undefined;
 let readingListUrls = new Set<string>();
 let readingListPendingTabIds = new Set<number>();
-let view: ViewState = { zoom: 0.6, panX: 0, panY: 0 };
+let view: CameraView = { zoom: 0.6, panX: 0, panY: 0 };
 let panAnchor: PanAnchor | undefined;
 let dragState: DragState | undefined;
+let dragPreviewLayout: WindowLayout | undefined;
+let renamingWindowId: number | undefined;
+let renderPending = false;
 let hasInitialView = false;
 let windowDetailsVisible = false;
 let searchFitFrame: number | undefined;
+let cameraAnimationFrame: number | undefined;
+let cameraHudFrame: number | undefined;
+let viewportBounds: ViewportBounds = { left: 0, top: 0, width: 0, height: 0 };
 const domainColorCache = new Map<string, DomainCardColors | null>();
 const domainColorRequests = new Set<string>();
 const colorSchemeQuery = window.matchMedia('(prefers-color-scheme: dark)');
+const reducedMotionQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
 
 const viewport = requiredElement<HTMLElement>('#viewport');
 const world = requiredElement<HTMLElement>('#world');
 const windowMap = requiredElement<HTMLElement>('#window-map');
-const tabCount = requiredElement<HTMLElement>('#tab-count');
 const statusEl = requiredElement<HTMLElement>('#status');
 const overviewStats = requiredElement<HTMLElement>('#overview-stats');
 const returnOriginButton = requiredElement<HTMLElement>('#return-origin');
@@ -83,8 +109,11 @@ const zoomSlider = requiredElement<HTMLElement & { value: number }>('#zoom-slide
 const zoomLabel = requiredElement<HTMLElement>('#zoom-label');
 const dragBanner = requiredElement<HTMLElement>('#drag-banner');
 const dragTitle = requiredElement<HTMLElement>('#drag-title');
+const dragInstruction = requiredElement<HTMLElement>('#drag-instruction');
 const skyHint = requiredElement<HTMLElement>('#sky-hint');
+const searchAnnouncement = requiredElement<HTMLElement>('#search-announcement');
 const sortButtons = Array.from(document.querySelectorAll<HTMLElement>('[data-sort]'));
+const viewportResizeObserver = new ResizeObserver(handleViewportResize);
 
 void init();
 
@@ -108,7 +137,7 @@ async function init(): Promise<void> {
 
   const [stored, storedSession] = await Promise.all([
     chrome.storage.local.get({ [SORT_STORAGE_KEY]: 'position' }),
-    chrome.storage.session.get({ [WINDOW_NAMES_STORAGE_KEY]: {} })
+    chrome.storage.session.get({ [WINDOW_NAMES_STORAGE_KEY]: {}, [WINDOW_LAYOUT_STORAGE_KEY]: undefined })
   ]);
   const storedSortMode = stored[SORT_STORAGE_KEY];
 
@@ -120,8 +149,12 @@ async function init(): Promise<void> {
     pendingTabIds: new Set()
   };
   windowNames = toWindowNames(storedSession[WINDOW_NAMES_STORAGE_KEY]);
+  currentLayout = (storedSession[WINDOW_LAYOUT_STORAGE_KEY] as WindowLayout | undefined) ?? currentLayout;
 
+  readViewportBounds();
+  viewportResizeObserver.observe(viewport);
   bindEvents();
+  renderCamera();
   syncSortControl();
   await refreshReadingList();
   await refreshTabs();
@@ -147,6 +180,7 @@ function bindEvents(): void {
   document.addEventListener('pointerdown', (event) => {
     if (!(event.target instanceof Node) || searchInput.contains(event.target) || searchResults.contains(event.target)) return;
     searchResults.hidden = true;
+    searchInput.setAttribute('aria-expanded', 'false');
   });
 
   viewport.addEventListener('wheel', handleWheel, { passive: false });
@@ -154,39 +188,47 @@ function bindEvents(): void {
   viewport.addEventListener('pointermove', movePan);
   viewport.addEventListener('pointerup', endPan);
   viewport.addEventListener('pointercancel', endPan);
-  window.addEventListener('resize', applyView);
 
   document.addEventListener('keydown', handleKeydown);
 
   chrome.tabs.onCreated.addListener(scheduleRefresh);
+  chrome.tabs.onActivated.addListener(scheduleRefresh);
   chrome.tabs.onUpdated.addListener((_tabId, changeInfo) => {
     const interestingChange =
       'url' in changeInfo ||
       'pendingUrl' in changeInfo ||
       'title' in changeInfo ||
       'favIconUrl' in changeInfo ||
-      'status' in changeInfo ||
       'audible' in changeInfo ||
       'mutedInfo' in changeInfo ||
-      'pinned' in changeInfo ||
-      'discarded' in changeInfo ||
-      'frozen' in changeInfo;
+      'pinned' in changeInfo;
     if (interestingChange) scheduleRefresh();
   });
   chrome.tabs.onRemoved.addListener((tabId) => {
-    if (state.originTabId === tabId) state.originTabId = undefined;
+    if (state.originTabId === tabId) setOriginTabId(undefined);
     scheduleRefresh();
   });
   chrome.tabs.onMoved.addListener(scheduleRefresh);
   chrome.tabs.onAttached.addListener(scheduleRefresh);
-  chrome.tabs.onDetached.addListener((tabId) => {
-    if (state.originTabId === tabId) state.originTabId = undefined;
+  chrome.tabs.onDetached.addListener(scheduleRefresh);
+  chrome.tabs.onReplaced.addListener((addedTabId, removedTabId) => {
+    const nextOriginTabId = remapTabId(state.originTabId, addedTabId, removedTabId);
+    if (nextOriginTabId !== state.originTabId) setOriginTabId(nextOriginTabId);
     scheduleRefresh();
   });
-  chrome.tabs.onReplaced.addListener(scheduleRefresh);
   chrome.windows.onCreated.addListener(scheduleRefresh);
   chrome.windows.onRemoved.addListener(scheduleRefresh);
   chrome.windows.onFocusChanged.addListener(scheduleRefresh);
+
+  chrome.storage.onChanged.addListener((changes, areaName) => {
+    if (areaName !== 'session') return;
+    const sharedLayout = changes[WINDOW_LAYOUT_STORAGE_KEY]?.newValue as WindowLayout | undefined;
+    if (!sharedLayout || managedWindows.length === 0) return;
+    const nextLayout = reconcileWindowLayout(managedWindows, sharedLayout);
+    if (windowLayoutsEqual(currentLayout, nextLayout)) return;
+    currentLayout = nextLayout;
+    render();
+  });
 
   colorSchemeQuery.addEventListener('change', () => {
     domainColorCache.clear();
@@ -196,7 +238,7 @@ function bindEvents(): void {
 
   chrome.runtime.onMessage.addListener((message: unknown, _sender, sendResponse) => {
     if (!isReopenMessage(message) || message.sourceWindowId !== state.sourceWindowId) return;
-    state.originTabId = message.sourceTabId === state.selfTabId ? undefined : message.sourceTabId;
+    setOriginTabId(message.sourceTabId === state.selfTabId ? undefined : message.sourceTabId);
     setSearchQuery('');
     void refreshTabs().then(() => zoomToWindow(state.sourceWindowId));
     sendResponse(true);
@@ -239,10 +281,15 @@ function handleKeydown(event: KeyboardEvent): void {
     if (typeof selectedTabId === 'number') void openTab(selectedTabId);
     return;
   }
-  if (isSearchNavigationKey(event.key) && !isCommandTarget(event.target)) {
-    event.preventDefault();
-    moveSelection(event.key);
-    return;
+  if (isSearchNavigationKey(event.key)) {
+    const fromSearchField = event.target === searchInput;
+    const columnCount = navigationColumnCount(event.key, fromSearchField, hasNavigationModifier(event));
+    const hasVisibleSearchResults = fromSearchField && Boolean(searchQuery);
+    if (typeof columnCount === 'number' && (hasVisibleSearchResults || (!fromSearchField && !isCommandTarget(event.target)))) {
+      event.preventDefault();
+      moveSelection(event.key, columnCount);
+      return;
+    }
   }
   if (isSearchKeystroke(event)) {
     event.preventDefault();
@@ -273,10 +320,12 @@ async function refreshReadingList(): Promise<void> {
 }
 
 async function refreshTabs(): Promise<void> {
+  const requestId = ++refreshRequestId;
   const chromeWindows = await chrome.windows.getAll({ populate: true, windowTypes: ['normal'] });
+  if (requestId !== refreshRequestId) return;
   const eagleBaseUrl = getEagleBaseUrl();
 
-  managedWindows = chromeWindows
+  managedWindows = sortWindowsById(chromeWindows
     .filter((windowItem): windowItem is chrome.windows.Window & { id: number } => typeof windowItem.id === 'number')
     .map((windowItem) => ({
       id: windowItem.id,
@@ -287,19 +336,13 @@ async function refreshTabs(): Promise<void> {
         .filter((tab) => !isEagleUrl(tab.url, eagleBaseUrl) && !isEagleUrl(tab.pendingUrl, eagleBaseUrl))
         .map(toManagedTab)
         .filter((tab): tab is ManagedTab => Boolean(tab))
-    }))
-    .sort((left, right) => {
-      if (left.id === state.sourceWindowId) return -1;
-      if (right.id === state.sourceWindowId) return 1;
-      if (left.focused !== right.focused) return Number(right.focused) - Number(left.focused);
-      return left.id - right.id;
-    });
+    })));
 
   managedTabs = managedWindows.flatMap((windowItem) => windowItem.tabs);
   rebuildOrderedTabs();
-  recalculateLayout();
+  await recalculateLayout();
 
-  if (state.originTabId && !managedTabs.some((tab) => tab.id === state.originTabId)) state.originTabId = undefined;
+  if (state.originTabId && !managedTabs.some((tab) => tab.id === state.originTabId)) setOriginTabId(undefined);
   render();
 
   if (!hasInitialView) {
@@ -312,8 +355,15 @@ function rebuildOrderedTabs(): void {
   orderedTabs = managedWindows.flatMap((windowItem) => sortTabs(windowItem.tabs, state.sortMode));
 }
 
-function recalculateLayout(): void {
-  currentLayout = reconcileWindowLayout(managedWindows, currentLayout);
+async function recalculateLayout(): Promise<void> {
+  const nextLayout = reconcileWindowLayout(managedWindows, currentLayout);
+  if (windowLayoutsEqual(currentLayout, nextLayout)) return;
+  currentLayout = nextLayout;
+  await persistWindowLayout();
+}
+
+async function persistWindowLayout(): Promise<void> {
+  await chrome.storage.session.set({ [WINDOW_LAYOUT_STORAGE_KEY]: currentLayout });
 }
 
 async function setSortMode(sortMode: SortMode): Promise<void> {
@@ -322,6 +372,7 @@ async function setSortMode(sortMode: SortMode): Promise<void> {
   rebuildOrderedTabs();
   syncSortControl();
   render();
+  scheduleCurrentSearchResultFit();
 }
 
 function syncSortControl(): void {
@@ -339,14 +390,18 @@ function syncSortControl(): void {
 }
 
 function render(): void {
+  if (dragState || typeof renamingWindowId === 'number') {
+    renderPending = true;
+    return;
+  }
+  renderPending = false;
+  const focusKey = focusedRenderKey();
   const matchingTabs = filterTabsBySearch(orderedTabs, searchQuery);
   const matchingIds = new Set(matchingTabs.map((tab) => tab.id));
   selectedTabId = reconcileSelectedTabId(matchingTabs, selectedTabId);
 
-  world.style.width = `${currentLayout.width}px`;
-  world.style.height = `${currentLayout.height}px`;
+  setWorldSize(currentLayout);
   windowMap.replaceChildren();
-  tabCount.textContent = countLabel(matchingTabs.length, managedTabs.length, managedWindows.length);
   returnOriginButton.toggleAttribute('disabled', !state.originTabId);
   returnOriginButton.toggleAttribute('hidden', !state.originTabId);
   overviewStats.innerHTML = `<span><i class="live-dot"></i>${managedWindows.length} ${managedWindows.length === 1 ? 'window' : 'windows'}</span><span>${managedTabs.length} tabs</span>`;
@@ -365,12 +420,48 @@ function render(): void {
   }
 
   renderSearchResults();
-  scheduleSearchResultFit(matchingIds);
+  syncDetailInteractionState();
+  restoreRenderedFocus(focusKey);
+}
+
+function setWorldSize(layout: WindowLayout): void {
+  world.style.width = `${layout.width}px`;
+  world.style.height = `${layout.height}px`;
+}
+
+function focusedRenderKey(): string | undefined {
+  const activeElement = document.activeElement;
+  if (!(activeElement instanceof HTMLElement) || !windowMap.contains(activeElement)) return undefined;
+  return activeElement.dataset.focusKey;
+}
+
+function restoreRenderedFocus(focusKey: string | undefined): void {
+  if (!focusKey) return;
+  const replacement = [...windowMap.querySelectorAll<HTMLElement>('[data-focus-key]')]
+    .find((element) => element.dataset.focusKey === focusKey);
+  replacement?.focus();
+}
+
+function syncDetailInteractionState(): void {
+  const hidden = !windowDetailsVisible;
+  windowMap.querySelectorAll<HTMLElement>('.reading-list-button, .window-footer').forEach((element) => {
+    element.toggleAttribute('inert', hidden);
+    element.setAttribute('aria-hidden', String(hidden));
+  });
+}
+
+function scheduleCurrentSearchResultFit(): void {
+  const matchingTabs = filterTabsBySearch(orderedTabs, searchQuery);
+  scheduleSearchResultFit(new Set(matchingTabs.map((tab) => tab.id)));
+}
+
+function cancelScheduledSearchFit(): void {
+  window.cancelAnimationFrame(searchFitFrame ?? 0);
+  searchFitFrame = undefined;
 }
 
 function scheduleSearchResultFit(matchingIds: Set<number>): void {
-  window.cancelAnimationFrame(searchFitFrame ?? 0);
-  searchFitFrame = undefined;
+  cancelScheduledSearchFit();
   if (!searchQuery || matchingIds.size === 0) return;
 
   const scheduledQuery = searchQuery;
@@ -391,7 +482,7 @@ function scheduleSearchResultFit(matchingIds: Set<number>): void {
 }
 
 function scheduleSelectedTabFit(tabId: number): void {
-  window.cancelAnimationFrame(searchFitFrame ?? 0);
+  cancelScheduledSearchFit();
   searchFitFrame = window.requestAnimationFrame(() => {
     searchFitFrame = undefined;
     if (!searchQuery || selectedTabId !== tabId) return;
@@ -407,16 +498,15 @@ function frameElementsInCamera(elements: HTMLElement[]): void {
   const bounds = worldBoundsForElements(elements);
   if (!bounds) return;
 
-  const viewportRect = viewport.getBoundingClientRect();
-  view = cameraForBounds(
+  const viewportRect = currentViewportBounds();
+  animateCameraTo(cameraForBounds(
     bounds,
     viewportRect.width,
     viewportRect.height,
     SEARCH_FIT_PADDING,
     MIN_ZOOM,
     MAX_ZOOM
-  );
-  applyView();
+  ));
 }
 
 function worldBoundsForElements(elements: HTMLElement[]): WorldBounds | undefined {
@@ -471,15 +561,15 @@ function createWindowCard(
     <div class="window-chrome">
       <div class="window-dots" aria-hidden="true"><i></i><i></i><i></i></div>
       <div class="window-title-area">
-        <md-text-button class="window-title-button" type="button" aria-label="Rename ${escapeAttribute(title)}">${escapeHtml(title)} <span class="rename-glyph">✎</span></md-text-button>
+        <md-text-button class="window-title-button" data-focus-key="rename-window-${windowItem.id}" type="button" aria-label="Rename ${escapeAttribute(title)}">${escapeHtml(title)} <span class="rename-glyph">✎</span></md-text-button>
         ${windowItem.id === state.sourceWindowId ? '<em class="current-window-badge">Current</em>' : ''}
       </div>
       <span class="window-count">${searchQuery ? `${matchCount} of ${windowItem.tabs.length}` : `${windowItem.tabs.length} tabs`}</span>
     </div>
-    <div class="window-tab-grid" role="grid" aria-label="Tabs in ${escapeAttribute(title)}"></div>
+    <div class="window-tab-grid" role="list" aria-label="Tabs in ${escapeAttribute(title)}"></div>
     <div class="window-footer">
       <span>${sortModeLabel(state.sortMode)}</span>
-      <md-text-button class="zoom-window-button" type="button">Zoom to window</md-text-button>
+      <md-text-button class="zoom-window-button" data-focus-key="zoom-window-${windowItem.id}" type="button">Zoom to window</md-text-button>
     </div>
     <div class="window-drop-hint">Drop at end of ${escapeHtml(title)}</div>
   `;
@@ -532,16 +622,17 @@ function createTabCard(tab: ManagedTab, matchingIds: Set<number>): HTMLElement {
   ].join('');
 
   card.className = 'tab-card';
-  card.role = 'gridcell';
+  card.role = 'listitem';
   card.tabIndex = 0;
   card.draggable = !pending;
   card.dataset.tabId = String(tab.id);
   card.dataset.windowId = String(tab.windowId);
+  card.dataset.focusKey = `tab-${tab.id}`;
   card.classList.toggle('is-origin', origin);
   card.classList.toggle('is-pending', pending);
   card.classList.toggle('is-selected', selected);
   card.classList.toggle('is-search-dimmed', Boolean(searchQuery) && !matchingIds.has(tab.id));
-  card.setAttribute('aria-selected', String(selected));
+  card.setAttribute('aria-current', selected ? 'true' : 'false');
   applyDomainCardColors(card, tab);
   applyAgeCardColors(card, tab);
   card.innerHTML = `
@@ -553,8 +644,8 @@ function createTabCard(tab: ManagedTab, matchingIds: Set<number>): HTMLElement {
       <div class="tab-detail-line"><span>${escapeHtml(formatLastAccessed(tab.lastAccessed))}</span><span class="tab-statuses">${statuses}</span></div>
     </div>
     <div class="tab-card-actions">
-      <md-icon-button class="reading-list-button${tab.pinned || !readingListUrl ? ' is-unavailable' : ''}" type="button" aria-label="${escapeAttribute(`${readLaterLabel}: ${tab.title}`)}" ${canReadLater ? '' : 'disabled'}>${readingListIconSvg()}</md-icon-button>
-      <md-icon-button class="close-button" type="button" aria-label="Close tab: ${escapeAttribute(tab.title)}" ${pending ? 'disabled' : ''}>${closeIconSvg()}</md-icon-button>
+      <md-icon-button class="reading-list-button${tab.pinned || !readingListUrl ? ' is-unavailable' : ''}" data-focus-key="read-later-${tab.id}" type="button" aria-label="${escapeAttribute(`${readLaterLabel}: ${tab.title}`)}" ${canReadLater ? '' : 'disabled'}>${readingListIconSvg()}</md-icon-button>
+      <md-icon-button class="close-button" data-focus-key="close-${tab.id}" type="button" aria-label="Close tab: ${escapeAttribute(tab.title)}" ${pending ? 'disabled' : ''}>${closeIconSvg()}</md-icon-button>
     </div>
   `;
 
@@ -570,13 +661,13 @@ function createTabCard(tab: ManagedTab, matchingIds: Set<number>): HTMLElement {
     if (!dragState || dragState.tabId === tab.id) return;
     event.preventDefault();
     event.stopPropagation();
-    markDropTarget(tab.windowId, tab.id);
+    markDropTarget(tab.windowId, state.sortMode === 'position' ? tab.id : undefined);
   });
   card.addEventListener('drop', (event) => {
     if (!dragState || dragState.tabId === tab.id) return;
     event.preventDefault();
     event.stopPropagation();
-    void moveDraggedTab(tab.windowId, tab.id);
+    void moveDraggedTab(tab.windowId, state.sortMode === 'position' ? tab.id : undefined);
   });
   requiredChild<HTMLElement>(card, '.close-button').addEventListener('click', (event) => {
     event.stopPropagation();
@@ -599,6 +690,7 @@ function requiredChild<T extends Element>(parent: ParentNode, selector: string):
 function renderSearchResults(): void {
   if (!searchQuery) {
     searchResults.hidden = true;
+    searchInput.setAttribute('aria-expanded', 'false');
     searchResults.replaceChildren();
     return;
   }
@@ -606,12 +698,13 @@ function renderSearchResults(): void {
   const matches = filterTabsBySearch(orderedTabs, searchQuery);
   searchResults.replaceChildren();
   searchResults.hidden = false;
+  searchInput.setAttribute('aria-expanded', 'true');
   const heading = document.createElement('div');
   heading.className = 'result-heading';
   heading.textContent = `${matches.length} open ${matches.length === 1 ? 'tab' : 'tabs'} across all windows`;
   searchResults.append(heading);
 
-  matches.slice(0, 8).forEach((tab) => {
+  matches.forEach((tab) => {
     const button = document.createElement('button');
     const windowItem = managedWindows.find((item) => item.id === tab.windowId);
     const windowIndex = Math.max(0, managedWindows.findIndex((item) => item.id === tab.windowId));
@@ -638,24 +731,91 @@ function beginTabDrag(event: DragEvent, tab: ManagedTab): void {
   event.stopPropagation();
   event.dataTransfer.effectAllowed = 'move';
   event.dataTransfer.setData('text/plain', tab.title);
-  dragState = { tabId: tab.id, sourceWindowId: tab.windowId };
+  dragState = { tabId: tab.id };
   document.body.classList.add('is-dragging');
   event.currentTarget instanceof HTMLElement && event.currentTarget.classList.add('is-drag-source');
   dragTitle.textContent = `Moving ${tab.title}`;
+  dragInstruction.textContent = dragDropInstruction();
   dragBanner.hidden = false;
-  skyHint.textContent = 'Arrange · drop onto a window or between tabs';
+  skyHint.textContent = `Arrange · ${dragDropInstruction()}`;
+  showNewWindowDropTarget(tab);
   fitAll();
+}
+
+function showNewWindowDropTarget(tab: ManagedTab): void {
+  const sourceWindow = managedWindows.find((windowItem) => windowItem.id === tab.windowId);
+  const previewWindow: ManagedWindow = {
+    id: NEW_WINDOW_PREVIEW_ID,
+    focused: false,
+    incognito: sourceWindow?.incognito ?? false,
+    tabs: [tab]
+  };
+  dragPreviewLayout = reconcileWindowLayout([...managedWindows, previewWindow], currentLayout);
+  const previewItem = dragPreviewLayout.items.find((item) => item.windowId === NEW_WINDOW_PREVIEW_ID);
+  if (!previewItem) return;
+
+  setWorldSize(dragPreviewLayout);
+  const target = createNewWindowDropTarget(previewItem);
+  windowMap.append(target);
+}
+
+function createNewWindowDropTarget(layoutItem: WindowLayoutItem): HTMLElement {
+  const target = document.createElement('article');
+  target.className = 'browser-window new-window-drop-target';
+  target.setAttribute('aria-label', 'Drop to move this tab into a new Chrome window');
+  target.style.left = `${layoutItem.x}px`;
+  target.style.top = `${layoutItem.y}px`;
+  target.style.width = `${layoutItem.width}px`;
+  target.style.height = `${layoutItem.height}px`;
+  target.innerHTML = `
+    <div class="window-chrome">
+      <div class="window-dots" aria-hidden="true"><i></i><i></i><i></i></div>
+      <div class="window-title-area"><strong>New window</strong></div>
+      <span class="window-count">1 tab</span>
+    </div>
+    <div class="new-window-drop-body">
+      <span aria-hidden="true">＋</span>
+      <strong>Drop here</strong>
+      <small>Move this tab into its own window</small>
+    </div>
+    <div class="window-footer"><span>Reserved position</span></div>
+  `;
+  target.addEventListener('dragover', (event) => {
+    if (!dragState) return;
+    event.preventDefault();
+    event.stopPropagation();
+    if (event.dataTransfer) event.dataTransfer.dropEffect = 'move';
+    markNewWindowDropTarget();
+  });
+  target.addEventListener('drop', (event) => {
+    if (!dragState) return;
+    event.preventDefault();
+    event.stopPropagation();
+    void moveDraggedTabToNewWindow();
+  });
+  return target;
 }
 
 function markDropTarget(windowId: number, beforeTabId?: number): void {
   if (!dragState) return;
-  dragState.overWindowId = windowId;
-  dragState.beforeTabId = beforeTabId;
   windowMap.querySelectorAll('.is-drop-target, .drop-before').forEach((element) => element.classList.remove('is-drop-target', 'drop-before'));
-  windowMap.querySelector<HTMLElement>(`.browser-window[data-window-id="${windowId}"]`)?.classList.add('is-drop-target');
   if (typeof beforeTabId === 'number') {
     windowMap.querySelector<HTMLElement>(`.tab-card[data-tab-id="${beforeTabId}"]`)?.classList.add('drop-before');
+  } else {
+    windowMap.querySelector<HTMLElement>(`.browser-window[data-window-id="${windowId}"]`)?.classList.add('is-drop-target');
   }
+}
+
+function markNewWindowDropTarget(): void {
+  if (!dragState) return;
+  windowMap.querySelectorAll('.is-drop-target, .drop-before').forEach((element) => element.classList.remove('is-drop-target', 'drop-before'));
+  windowMap.querySelector<HTMLElement>('.new-window-drop-target')?.classList.add('is-drop-target');
+}
+
+function dragDropInstruction(): string {
+  return state.sortMode === 'position'
+    ? 'Drop onto a window, between tabs, or into New window'
+    : 'Drop into a window or into New window';
 }
 
 async function moveDraggedTab(targetWindowId: number, beforeTabId?: number): Promise<void> {
@@ -684,12 +844,41 @@ async function moveDraggedTab(targetWindowId: number, beforeTabId?: number): Pro
   }
 }
 
+async function moveDraggedTabToNewWindow(): Promise<void> {
+  if (!dragState) return;
+  const sourceTab = managedTabs.find((tab) => tab.id === dragState?.tabId);
+  const previewLayout = dragPreviewLayout;
+  if (!sourceTab || !previewLayout) {
+    clearDragState();
+    return;
+  }
+
+  clearDragState();
+  try {
+    const createdWindow = await chrome.windows.create({ tabId: sourceTab.id, focused: false });
+    if (typeof createdWindow?.id === 'number') {
+      currentLayout = replaceWindowIdInLayout(previewLayout, NEW_WINDOW_PREVIEW_ID, createdWindow.id);
+      await persistWindowLayout();
+    }
+    setStatus(`Moved “${sourceTab.title}” to a new window.`);
+  } catch {
+    setStatus('Chrome could not move that tab into a new window.');
+  } finally {
+    await refreshTabs();
+  }
+}
+
 function clearDragState(): void {
+  const shouldRender = renderPending;
   dragState = undefined;
+  dragPreviewLayout = undefined;
   document.body.classList.remove('is-dragging');
   dragBanner.hidden = true;
   skyHint.textContent = 'Scroll to zoom · drag the background to pan';
+  windowMap.querySelector('.new-window-drop-target')?.remove();
   windowMap.querySelectorAll('.is-drop-target, .drop-before, .is-drag-source').forEach((element) => element.classList.remove('is-drop-target', 'drop-before', 'is-drag-source'));
+  setWorldSize(currentLayout);
+  if (shouldRender) render();
 }
 
 function beginWindowRename(windowItem: ManagedWindow, windowIndex: number, card: HTMLElement): void {
@@ -703,18 +892,23 @@ function beginWindowRename(windowItem: ManagedWindow, windowIndex: number, card:
   field.setAttribute('aria-label', `Rename ${originalTitle}`);
   field.setAttribute('maxlength', '48');
   field.value = originalTitle;
+  renamingWindowId = windowItem.id;
   titleButton.replaceWith(field);
 
   const finish = async (): Promise<void> => {
     if (finished) return;
     finished = true;
     const nextTitle = field.value.trim();
-    if (!cancelled && nextTitle && nextTitle !== originalTitle) {
-      windowNames[String(windowItem.id)] = nextTitle;
-      await chrome.storage.session.set({ [WINDOW_NAMES_STORAGE_KEY]: windowNames });
-      setStatus(`Renamed window to “${nextTitle}”.`);
+    renamingWindowId = undefined;
+    try {
+      if (!cancelled && nextTitle && nextTitle !== originalTitle) {
+        windowNames[String(windowItem.id)] = nextTitle;
+        await chrome.storage.session.set({ [WINDOW_NAMES_STORAGE_KEY]: windowNames });
+        setStatus(`Renamed window to “${nextTitle}”.`);
+      }
+    } finally {
+      render();
     }
-    render();
   };
 
   field.addEventListener('keydown', (event) => {
@@ -743,7 +937,10 @@ function handleWheel(event: WheelEvent): void {
 }
 
 function beginPan(event: PointerEvent): void {
+  if (event.button !== 0) return;
   if (!(event.target instanceof Element) || event.target.closest('.browser-window, .zoom-control, .overview-stats, .status')) return;
+  cancelScheduledSearchFit();
+  stopCameraAnimation();
   viewport.setPointerCapture(event.pointerId);
   viewport.classList.add('is-panning');
   panAnchor = { clientX: event.clientX, clientY: event.clientY, panX: view.panX, panY: view.panY };
@@ -751,9 +948,11 @@ function beginPan(event: PointerEvent): void {
 
 function movePan(event: PointerEvent): void {
   if (!panAnchor) return;
-  view.panX = panAnchor.panX + event.clientX - panAnchor.clientX;
-  view.panY = panAnchor.panY + event.clientY - panAnchor.clientY;
-  applyView();
+  setCameraView({
+    zoom: view.zoom,
+    panX: panAnchor.panX + event.clientX - panAnchor.clientX,
+    panY: panAnchor.panY + event.clientY - panAnchor.clientY
+  });
 }
 
 function endPan(): void {
@@ -762,67 +961,156 @@ function endPan(): void {
 }
 
 function fitAll(): void {
-  const rect = viewport.getBoundingClientRect();
+  cancelScheduledSearchFit();
+  const rect = currentViewportBounds();
+  const layout = dragPreviewLayout ?? currentLayout;
   const nextZoom = clamp(
-    Math.min((rect.width - 72) / currentLayout.width, (rect.height - 72) / currentLayout.height),
+    Math.min((rect.width - 72) / layout.width, (rect.height - 72) / layout.height),
     MIN_ZOOM,
     0.82
   );
-  view = {
+  animateCameraTo({
     zoom: nextZoom,
-    panX: (rect.width - currentLayout.width * nextZoom) / 2,
-    panY: (rect.height - currentLayout.height * nextZoom) / 2
-  };
-  applyView();
+    panX: (rect.width - layout.width * nextZoom) / 2,
+    panY: (rect.height - layout.height * nextZoom) / 2
+  });
 }
 
 function zoomToWindow(windowId: number): void {
+  cancelScheduledSearchFit();
   const item = currentLayout.items.find((candidate) => candidate.windowId === windowId);
   if (!item) return;
-  const rect = viewport.getBoundingClientRect();
+  const rect = currentViewportBounds();
   const targetZoom = clamp(Math.min((rect.width - 120) / item.width, (rect.height - 110) / item.height), 0.76, 1.12);
-  view = {
+  animateCameraTo({
     zoom: targetZoom,
     panX: rect.width / 2 - (item.x + item.width / 2) * targetZoom,
     panY: rect.height / 2 - (item.y + item.height / 2) * targetZoom
-  };
-  applyView();
+  });
 }
 
 function zoomAt(nextZoom: number, clientX?: number, clientY?: number): void {
-  const rect = viewport.getBoundingClientRect();
+  cancelScheduledSearchFit();
+  const rect = currentViewportBounds();
   const anchorX = (clientX ?? rect.left + rect.width / 2) - rect.left;
   const anchorY = (clientY ?? rect.top + rect.height / 2) - rect.top;
-  const bounded = clamp(nextZoom, MIN_ZOOM, MAX_ZOOM);
-  view.panX = anchorX - ((anchorX - view.panX) / view.zoom) * bounded;
-  view.panY = anchorY - ((anchorY - view.panY) / view.zoom) * bounded;
-  view.zoom = bounded;
-  applyView();
+  setCameraView(zoomAboutPoint(view, nextZoom, anchorX, anchorY, MIN_ZOOM, MAX_ZOOM));
 }
 
-function applyView(): void {
+function setCameraView(nextView: CameraView): void {
+  stopCameraAnimation();
+  view = nextView;
+  renderCamera();
+}
+
+function animateCameraTo(targetView: CameraView): void {
+  stopCameraAnimation();
+  if (reducedMotionQuery.matches || cameraViewsNearlyEqual(view, targetView)) {
+    view = targetView;
+    renderCamera();
+    return;
+  }
+
+  const fromView = { ...view };
+  const { width, height } = currentViewportBounds();
+  const startedAt = performance.now();
+
+  const animate = (now: number): void => {
+    const progress = Math.min(1, (now - startedAt) / CAMERA_ANIMATION_DURATION_MS);
+    view = interpolateCameraView(fromView, targetView, easeOutCubic(progress), width, height);
+    renderCamera();
+    if (progress < 1) {
+      cameraAnimationFrame = window.requestAnimationFrame(animate);
+    } else {
+      cameraAnimationFrame = undefined;
+    }
+  };
+
+  cameraAnimationFrame = window.requestAnimationFrame(animate);
+}
+
+function stopCameraAnimation(): void {
+  if (typeof cameraAnimationFrame !== 'number') return;
+  window.cancelAnimationFrame(cameraAnimationFrame);
+  cameraAnimationFrame = undefined;
+}
+
+function renderCamera(): void {
   world.style.transform = `translate(${view.panX}px, ${view.panY}px) scale(${view.zoom})`;
-  zoomSlider.value = view.zoom;
-  zoomLabel.textContent = `${Math.round(view.zoom * 100)}%`;
-  updateDetailLevel();
+  scheduleCameraHudSync();
+}
+
+function scheduleCameraHudSync(): void {
+  if (typeof cameraHudFrame === 'number') return;
+  cameraHudFrame = window.requestAnimationFrame(() => {
+    cameraHudFrame = undefined;
+    if (Math.abs(Number(zoomSlider.value) - view.zoom) > 0.001) zoomSlider.value = view.zoom;
+    zoomLabel.textContent = `${Math.round(view.zoom * 100)}%`;
+    updateDetailLevel();
+  });
 }
 
 function updateDetailLevel(): void {
-  if (!windowDetailsVisible && view.zoom >= DETAIL_FADE_IN_ZOOM) windowDetailsVisible = true;
-  if (windowDetailsVisible && view.zoom <= DETAIL_FADE_OUT_ZOOM) windowDetailsVisible = false;
+  const nextDetailsVisible = detailVisibilityForZoom(
+    windowDetailsVisible,
+    view.zoom,
+    DETAIL_FADE_IN_ZOOM,
+    DETAIL_FADE_OUT_ZOOM
+  );
+  if (nextDetailsVisible === windowDetailsVisible) return;
+  windowDetailsVisible = nextDetailsVisible;
   document.documentElement.dataset.detailLevel = windowDetailsVisible ? 'window' : 'overview';
+  syncDetailInteractionState();
 }
 
-function moveSelection(key: SearchNavigationKey): void {
+function handleViewportResize(): void {
+  const previousBounds = viewportBounds;
+  const nextBounds = readViewportBounds();
+  if (previousBounds.width <= 0 || previousBounds.height <= 0) return;
+  if (
+    Math.abs(previousBounds.width - nextBounds.width) < 0.5 &&
+    Math.abs(previousBounds.height - nextBounds.height) < 0.5
+  ) return;
+
+  setCameraView(cameraForResize(
+    view,
+    previousBounds.width,
+    previousBounds.height,
+    nextBounds.width,
+    nextBounds.height
+  ));
+}
+
+function readViewportBounds(): ViewportBounds {
+  const rect = viewport.getBoundingClientRect();
+  viewportBounds = { left: rect.left, top: rect.top, width: rect.width, height: rect.height };
+  return viewportBounds;
+}
+
+function currentViewportBounds(): ViewportBounds {
+  if (viewportBounds.width <= 0 || viewportBounds.height <= 0) return readViewportBounds();
+  return viewportBounds;
+}
+
+function cameraViewsNearlyEqual(left: CameraView, right: CameraView): boolean {
+  return (
+    Math.abs(left.zoom - right.zoom) < 0.0001 &&
+    Math.abs(left.panX - right.panX) < 0.1 &&
+    Math.abs(left.panY - right.panY) < 0.1
+  );
+}
+
+function moveSelection(key: SearchNavigationKey, columnCount: number): void {
   const visibleTabs = filterTabsBySearch(orderedTabs, searchQuery);
   if (visibleTabs.length === 0) return;
-  const nextTabId = nextSelectedTabId(visibleTabs, selectedTabId, key, 1);
+  const nextTabId = nextSelectedTabId(visibleTabs, selectedTabId, key, columnCount);
   if (typeof nextTabId !== 'number' || nextTabId === selectedTabId) return;
   selectedTabId = nextTabId;
   updateSelectedCardAttributes();
   updateSelectedSearchResultAttributes();
   scrollSelectedSearchResultIntoView();
   scheduleSelectedTabFit(nextTabId);
+  announceSearchSelection(visibleTabs);
 }
 
 function setSearchQuery(query: string): void {
@@ -830,6 +1118,26 @@ function setSearchQuery(query: string): void {
   searchInput.value = query;
   selectedTabId = reconcileSelectedTabId(filterTabsBySearch(orderedTabs, searchQuery), selectedTabId, { resetToFirst: true });
   render();
+  scheduleCurrentSearchResultFit();
+  announceSearchSelection();
+}
+
+function announceSearchSelection(matches = filterTabsBySearch(orderedTabs, searchQuery)): void {
+  if (!searchQuery) {
+    searchAnnouncement.textContent = '';
+    return;
+  }
+  if (matches.length === 0) {
+    searchAnnouncement.textContent = 'No open tabs match.';
+    return;
+  }
+
+  const selectedIndex = Math.max(0, matches.findIndex((tab) => tab.id === selectedTabId));
+  const selectedTab = matches[selectedIndex];
+  const selectedWindow = managedWindows.find((windowItem) => windowItem.id === selectedTab?.windowId);
+  const windowIndex = selectedWindow ? managedWindows.indexOf(selectedWindow) : -1;
+  const selectedWindowTitle = selectedWindow ? windowTitle(selectedWindow, windowIndex) : 'Chrome window';
+  searchAnnouncement.textContent = `${selectedTab?.title ?? 'Tab'}, ${selectedWindowTitle}, result ${selectedIndex + 1} of ${matches.length}.`;
 }
 
 function selectTabCard(tabId: number): void {
@@ -842,7 +1150,7 @@ function updateSelectedCardAttributes(): void {
   windowMap.querySelectorAll<HTMLElement>('.tab-card').forEach((card) => {
     const selected = Number(card.dataset.tabId) === selectedTabId;
     card.classList.toggle('is-selected', selected);
-    card.setAttribute('aria-selected', String(selected));
+    card.setAttribute('aria-current', selected ? 'true' : 'false');
   });
 }
 
@@ -944,9 +1252,14 @@ async function returnToOrigin(): Promise<void> {
     if (origin) await chrome.windows.update(origin.windowId, { focused: true });
   } catch {
     setStatus('The origin tab is no longer available.');
-    state.originTabId = undefined;
+    setOriginTabId(undefined);
     await refreshTabs();
   }
+}
+
+function setOriginTabId(originTabId: number | undefined): void {
+  state.originTabId = originTabId;
+  history.replaceState(null, '', updateEagleSourceUrl(location.href, originTabId, state.sourceWindowId));
 }
 
 async function closeSelf(): Promise<void> {
@@ -979,21 +1292,31 @@ function applyAgeCardColors(card: HTMLElement, tab: ManagedTab): void {
 async function ensureDomainColor(tab: ManagedTab): Promise<void> {
   const cacheKey = domainColorCacheKey(tab.domain);
   if (domainColorCache.has(cacheKey) || domainColorRequests.has(cacheKey)) return;
-  const pageUrl = toReadingListUrl(tab);
-  if (!pageUrl) {
+  const faviconUrl = faviconUrlForTab(tab);
+  if (!faviconUrl) {
     domainColorCache.set(cacheKey, null);
     return;
   }
   domainColorRequests.add(cacheKey);
   try {
-    const image = await loadImage(faviconUrlForPageUrl(pageUrl));
+    const image = await loadImage(faviconUrl);
     domainColorCache.set(cacheKey, await colorsFromImage(image, currentThemeMode()));
   } catch {
     domainColorCache.set(cacheKey, null);
   } finally {
     domainColorRequests.delete(cacheKey);
   }
-  if (state.sortMode === 'domain' && managedTabs.some((item) => item.domain === tab.domain) && !dragState) render();
+  if (state.sortMode === 'domain') applyResolvedDomainColors(tab.domain);
+}
+
+function applyResolvedDomainColors(domain: string): void {
+  const tabsById = new Map(
+    managedTabs.filter((tab) => tab.domain === domain).map((tab) => [tab.id, tab])
+  );
+  windowMap.querySelectorAll<HTMLElement>('.tab-card').forEach((card) => {
+    const tab = tabsById.get(Number(card.dataset.tabId));
+    if (tab) applyDomainCardColors(card, tab);
+  });
 }
 
 function currentThemeMode(): ThemeMode {
@@ -1005,8 +1328,9 @@ function domainColorCacheKey(domain: string): string {
 }
 
 function faviconMarkup(tab: ManagedTab): string {
-  const fallback = `<div class="favicon fallback${tab.favIconUrl ? ' is-hidden' : ''}" aria-hidden="true">${escapeHtml(tab.domain[0]?.toUpperCase() ?? '?')}</div>`;
-  return `<div class="favicon-frame">${tab.favIconUrl ? `<img class="favicon favicon-image" src="${escapeAttribute(tab.favIconUrl)}" alt="" loading="lazy" />` : ''}${fallback}</div>`;
+  const faviconUrl = faviconUrlForTab(tab);
+  const fallback = `<div class="favicon fallback${faviconUrl ? ' is-hidden' : ''}" aria-hidden="true">${escapeHtml(tab.domain[0]?.toUpperCase() ?? '?')}</div>`;
+  return `<div class="favicon-frame">${faviconUrl ? `<img class="favicon favicon-image" src="${escapeAttribute(faviconUrl)}" alt="" loading="lazy" />` : ''}${fallback}</div>`;
 }
 
 function bindFaviconFallback(parent: ParentNode): void {
@@ -1054,11 +1378,6 @@ function setStatus(message: string): void {
   }
 }
 
-function countLabel(visibleCount: number, totalCount: number, windowCount: number): string {
-  if (searchQuery) return `${visibleCount} of ${totalCount} tabs`;
-  return `${totalCount} tabs · ${windowCount} ${windowCount === 1 ? 'window' : 'windows'}`;
-}
-
 function sortModeLabel(sortMode: SortMode): string {
   if (sortMode === 'domain') return 'Sorted by domain';
   if (sortMode === 'recent' || sortMode === 'leastRecent') return 'Sorted by tab age';
@@ -1091,6 +1410,10 @@ function isSearchKeystroke(event: KeyboardEvent): boolean {
 
 function isSearchNavigationKey(key: string): key is SearchNavigationKey {
   return key === 'ArrowLeft' || key === 'ArrowRight' || key === 'ArrowUp' || key === 'ArrowDown';
+}
+
+function hasNavigationModifier(event: KeyboardEvent): boolean {
+  return event.metaKey || event.ctrlKey || event.altKey || event.shiftKey;
 }
 
 function isEditableTarget(target: EventTarget | null): boolean {

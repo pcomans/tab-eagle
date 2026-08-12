@@ -6,14 +6,14 @@ This file contains copy and checklist items for publishing Tab Eagle to the Chro
 
 Build and zip the extension from the `dist` folder. The `manifest.json` file must be at the root of the ZIP.
 
-GitHub Actions builds and packages the extension automatically. Push a matching version tag such as `v0.1.0` to create or update a GitHub Release with `tab-eagle-0.1.0.zip` attached.
+GitHub Actions builds and packages the extension automatically. Push the matching `v0.2.0` tag to create a GitHub Release with `tab-eagle-0.2.0.zip` attached.
 
 ```sh
 npm run typecheck
 npm test
 npm run build
 cd dist
-zip -r ../tab-eagle-0.1.0.zip .
+zip -r ../tab-eagle-0.2.0.zip .
 ```
 
 ## Store Listing
@@ -30,7 +30,7 @@ A zoomable bird's-eye view of tabs across your Chrome windows.
 
 Tab Eagle gives you a fast full-screen map of the tabs across all your normal Chrome windows. It opens centered on the window you came from, then lets you zoom out to see the complete browser.
 
-Search across windows by title or URL, drag tabs between windows, sort each window by position, domain, or recent activity, jump directly to a tab, close tabs from the map, and add eligible pages to Chrome's built-in Reading List.
+Search across windows by title or URL, drag tabs between windows or into a new window, sort each window by position, domain, or recent activity, jump directly to a tab, close tabs from the map, and add eligible pages to Chrome's built-in Reading List.
 
 Tab Eagle is built for people who keep many tabs open and need a calmer way to find, triage, and clean them up. It does not request access to all data on all websites, does not use host permissions, and does not send your tab data to any developer-operated server.
 
@@ -38,7 +38,7 @@ Key features:
 
 - Zoomable multi-window tab map
 - Cross-window type-to-search by tab title or URL
-- Drag and drop tabs within or between windows
+- Drag and drop tabs within, between, or into a new window
 - Sorting inside each window by tab position, domain, newest used, or oldest used
 - Visual color treatments for domain and recent-activity sorting
 - Click a tab card to activate that tab
@@ -82,7 +82,7 @@ Required to list, move, activate, close, and read metadata for tabs across the u
 
 `storage`
 
-Required to save the user's preferred sort mode locally and session window labels in extension session storage.
+Required to save the user's preferred sort mode locally and session window labels and canvas positions in extension session storage.
 
 `readingList`
 
@@ -102,7 +102,7 @@ Tab Eagle processes tab titles, URLs, pending URLs, favicons, tab metadata, last
 
 Tab Eagle does not sell, rent, share, transfer, or transmit this data to any developer-operated server.
 
-Tab Eagle stores the user's preferred sort mode in local Chrome extension storage and user-created window labels in session storage. Session labels clear when Chrome restarts.
+Tab Eagle stores the user's preferred sort mode in local Chrome extension storage and user-created window labels and canvas positions in session storage. Session data clears when Chrome restarts.
 
 ### Limited Use Certification
 
@@ -126,7 +126,7 @@ Test flow:
 
 1. Scroll or use the zoom controls to move between the invoking window and the all-window overview.
 2. Type in the search field or type directly on the page to highlight matching tabs across windows.
-3. Drag a tab onto another window or between two tabs.
+3. With Position sorting active, drag a tab onto another window, between two tabs, or onto New window. With another sort active, drop it into a window or onto New window.
 4. Click a window title to save a session label.
 5. Click Position, Domain, or Recent to change the ordering inside every window.
 6. Click Recent again to toggle newest-first and oldest-first.
@@ -141,7 +141,7 @@ Expected behavior:
 
 ## Required Assets
 
-Already in the repo:
+Icons and promotional artwork are already in the repo:
 
 - `public/icons/icon16.png`
 - `public/icons/icon32.png`
@@ -150,10 +150,6 @@ Already in the repo:
 - `store-assets/icons/tab-eagle-store-icon-128.png`
 - `store-assets/icons/tab-eagle-store-icon-512.png`
 - `store-assets/icons/tab-eagle-store-icon-1024.png`
-- `store-assets/screenshots/01-overview.png`
-- `store-assets/screenshots/02-type-to-search.png`
-- `store-assets/screenshots/03-domain-sort.png`
-- `store-assets/screenshots/04-recent-sort.png`
 - `store-assets/promo/small-promo-tile-440x280.png`
 - `store-assets/promo/marquee-promo-tile-1400x560.png`
 - `store-assets/social/github-social-preview.png`
@@ -166,6 +162,8 @@ Chrome Web Store screenshots:
 - `store-assets/screenshots/04-recent-sort.png`: recent sorting with age colors
 
 All screenshots are 1280x800.
+
+The four screenshot files must be replaced with captures of the 0.2.0 multi-window interface before submission; the current files show the previous single-window release.
 
 Optional:
 

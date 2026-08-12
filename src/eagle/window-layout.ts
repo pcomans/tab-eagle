@@ -18,6 +18,38 @@ export interface WindowLayout {
   height: number;
 }
 
+export function sortWindowsById(windows: ManagedWindow[]): ManagedWindow[] {
+  return [...windows].sort((left, right) => left.id - right.id);
+}
+
+export function replaceWindowIdInLayout(layout: WindowLayout, currentWindowId: number, nextWindowId: number): WindowLayout {
+  return {
+    ...layout,
+    items: layout.items.map((item) =>
+      item.windowId === currentWindowId ? { ...item, windowId: nextWindowId } : item
+    )
+  };
+}
+
+export function windowLayoutsEqual(left: WindowLayout, right: WindowLayout): boolean {
+  return (
+    left.width === right.width &&
+    left.height === right.height &&
+    left.items.length === right.items.length &&
+    left.items.every((item, index) => {
+      const other = right.items[index];
+      return Boolean(
+        other &&
+        item.windowId === other.windowId &&
+        item.x === other.x &&
+        item.y === other.y &&
+        item.width === other.width &&
+        item.height === other.height
+      );
+    })
+  );
+}
+
 export function layoutWindows(windows: ManagedWindow[]): WindowLayout {
   if (windows.length === 0) {
     return { items: [], width: WINDOW_CARD_WIDTH + WORLD_MARGIN * 2, height: 520 };
@@ -61,15 +93,12 @@ export function reconcileWindowLayout(windows: ManagedWindow[], previousLayout: 
 
   const previousItems = new Map(previousLayout.items.map((item) => [item.windowId, item]));
   const idealItems = new Map(layoutWindows(windows).items.map((item) => [item.windowId, item]));
-  const items: WindowLayoutItem[] = [];
-
-  windows.forEach((windowItem) => {
+  const items = windows.flatMap((windowItem): WindowLayoutItem[] => {
     const previous = previousItems.get(windowItem.id);
-    if (previous) {
-      items.push({ ...previous, height: windowCardHeight(windowItem.tabs.length) });
-      return;
-    }
+    return previous ? [{ ...previous, height: windowCardHeight(windowItem.tabs.length) }] : [];
+  });
 
+  windows.filter((windowItem) => !previousItems.has(windowItem.id)).forEach((windowItem) => {
     const ideal = idealItems.get(windowItem.id);
     if (ideal) items.push(placeNewWindow(ideal, items));
   });

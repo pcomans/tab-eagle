@@ -11,7 +11,7 @@
       <header class="top-bar">
         <button id="fit-brand" class="brand" type="button" aria-label="Fit all Chrome windows">
           <img class="title-logo" src="/icons/icon128.png" alt="" aria-hidden="true" />
-          <span><strong>Tab Eagle</strong><small>All your windows</small></span>
+          <strong>Tab Eagle</strong>
         </button>
 
         <div class="search-wrap">
@@ -21,12 +21,15 @@
             type="search"
             placeholder="Search every open tab"
             aria-label="Search tabs across every Chrome window"
+            aria-controls="search-results"
+            aria-expanded="false"
           >
             <svg slot="leading-icon" class="search-icon" viewBox="0 0 24 24" aria-hidden="true">
               <path d="M15.5 14h-.79l-.28-.27a6.5 6.5 0 1 0-.7.7l.27.28v.79l5 4.99L20.49 19zm-6 0A4.5 4.5 0 1 1 14 9.5 4.5 4.5 0 0 1 9.5 14"/>
             </svg>
           </md-outlined-text-field>
           <div id="search-results" class="search-results" hidden></div>
+          <div id="search-announcement" class="visually-hidden" role="status" aria-live="polite" aria-atomic="true"></div>
         </div>
 
         <div class="toolbar">
@@ -36,7 +39,6 @@
             <md-outlined-segmented-button label="Recent" data-sort="recent"></md-outlined-segmented-button>
           </md-outlined-segmented-button-set>
           <md-outlined-button id="return-origin" type="button" hidden>Return to origin</md-outlined-button>
-          <span id="tab-count" class="total-count">Loading tabs…</span>
         </div>
       </header>
 
@@ -50,7 +52,7 @@
 
         <div id="drag-banner" class="drag-banner" aria-live="polite" hidden>
           <span class="drag-symbol">↗</span>
-          <span><strong id="drag-title"></strong><small>Drop onto a window or between two tabs</small></span>
+          <span><strong id="drag-title"></strong><small id="drag-instruction"></small></span>
         </div>
 
         <div class="zoom-control" aria-label="Zoom controls">

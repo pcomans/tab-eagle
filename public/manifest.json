@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Tab Eagle",
-  "version": "0.1.4",
+  "version": "0.2.0",
   "description": "A zoomable bird's-eye view of tabs across all your Chrome windows.",
   "icons": {
     "16": "icons/icon16.png",
