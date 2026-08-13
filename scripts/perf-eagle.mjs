@@ -84,6 +84,7 @@ async function runSample({ sampleIndex, extensionPath: unpackedExtensionPath, fi
     const cold = await measureColdOpen({ browser, extension, sourcePage });
     if (tracePath) await sourcePage.tracing.stop();
     const warm = await measureWarmReopen({ extension, sourcePage, eaglePage: cold.page });
+    const noOp = await measureNoOpRefresh({ sourcePage, eaglePage: cold.page });
 
     return {
       sample: sampleIndex + 1,
@@ -98,7 +99,8 @@ async function runSample({ sampleIndex, extensionPath: unpackedExtensionPath, fi
       coldAppPhasesMs: phaseDurations(cold.appTimings),
       warmOverviewMs: round(warm.overviewMs),
       warmPaintedOverviewMs: round(warm.paintedOverviewMs),
-      warmRenderCount: warm.renderCount
+      warmRenderCount: warm.renderCount,
+      noOpRenderCount: noOp.renderCount
     };
   } finally {
     await browser.close();
@@ -247,6 +249,38 @@ async function measureWarmReopen({ extension, sourcePage, eaglePage }) {
   };
 }
 
+async function measureNoOpRefresh({ sourcePage, eaglePage }) {
+  const stopCounting = await countMapRebuilds(eaglePage);
+  await sourcePage.evaluate(() => {
+    const originalTitle = document.title;
+    document.title = `${originalTitle} · transient`;
+    document.title = originalTitle;
+  });
+  await delay(180);
+  return { renderCount: await stopCounting() };
+}
+
+async function countMapRebuilds(page) {
+  await page.evaluate(() => {
+    window.__tabEaglePerfRenderCount = 0;
+    const map = document.querySelector('#window-map');
+    if (!map) throw new Error('Tab Eagle window map is missing.');
+    const replaceChildren = map.replaceChildren.bind(map);
+    map.replaceChildren = (...nodes) => {
+      window.__tabEaglePerfRenderCount += 1;
+      replaceChildren(...nodes);
+    };
+    window.__tabEaglePerfRestoreReplaceChildren = () => {
+      map.replaceChildren = replaceChildren;
+    };
+  });
+
+  return () => page.evaluate(() => {
+    window.__tabEaglePerfRestoreReplaceChildren?.();
+    return window.__tabEaglePerfRenderCount;
+  });
+}
+
 async function waitForOverviewPaint(page) {
   return page.evaluate(() => new Promise((resolvePromise) => {
     requestAnimationFrame(() => requestAnimationFrame(() => {
@@ -349,7 +383,8 @@ function summarize(samples) {
       coldFirstContentfulPaintMs: median(samples.map((sample) => sample.coldFirstContentfulPaintMs)),
       warmOverviewMs: median(samples.map((sample) => sample.warmOverviewMs)),
       warmPaintedOverviewMs: median(samples.map((sample) => sample.warmPaintedOverviewMs)),
-      warmRenderCount: median(samples.map((sample) => sample.warmRenderCount))
+      warmRenderCount: median(samples.map((sample) => sample.warmRenderCount)),
+      noOpRenderCount: median(samples.map((sample) => sample.noOpRenderCount))
     },
     samples
   };
@@ -382,6 +417,7 @@ function printResult(result, resultPath) {
   console.log(`Warm invocation → overview:       ${formatMs(values.warmOverviewMs)}`);
   console.log(`Warm invocation → painted view:   ${formatMs(values.warmPaintedOverviewMs)}`);
   console.log(`Warm invocation render count:     ${values.warmRenderCount}`);
+  console.log(`No-op update render count:        ${values.noOpRenderCount}`);
   console.log(`Results: ${resultPath}`);
   if (options.trace) console.log(`Trace:   ${resolve(outputDir, 'eagle-cold.trace.json')}`);
 }
@@ -399,6 +435,9 @@ function enforceBudgets(result) {
   }
   if (options.warmRenderBudget && result.median.warmRenderCount > options.warmRenderBudget) {
     failures.push(`warm render count ${result.median.warmRenderCount} exceeded ${options.warmRenderBudget}`);
+  }
+  if (options.noOpRenderBudget !== undefined && result.median.noOpRenderCount > options.noOpRenderBudget) {
+    failures.push(`no-op render count ${result.median.noOpRenderCount} exceeded ${options.noOpRenderBudget}`);
   }
   if (failures.length > 0) throw new Error(`Performance budget failed: ${failures.join('; ')}.`);
 }
@@ -419,6 +458,7 @@ function parseOptions(args) {
     warmBudgetMs: optionalPositiveNumber(values.get('warm-budget-ms'), 'warm-budget-ms'),
     settledBudgetMs: optionalPositiveNumber(values.get('settled-budget-ms'), 'settled-budget-ms'),
     warmRenderBudget: optionalPositiveNumber(values.get('warm-render-budget'), 'warm-render-budget'),
+    noOpRenderBudget: optionalNonNegativeNumber(values.get('noop-render-budget'), 'noop-render-budget'),
     outputDir: values.get('output-dir') || 'perf-artifacts',
     trace: values.get('trace') === true
   };
@@ -435,6 +475,13 @@ function optionalPositiveNumber(value, name) {
   if (value === undefined) return undefined;
   const number = Number(value);
   if (!Number.isFinite(number) || number <= 0) throw new Error(`--${name} must be a positive number.`);
+  return number;
+}
+
+function optionalNonNegativeNumber(value, name) {
+  if (value === undefined) return undefined;
+  const number = Number(value);
+  if (!Number.isFinite(number) || number < 0) throw new Error(`--${name} must be zero or a positive number.`);
   return number;
 }
 

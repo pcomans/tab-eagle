@@ -12,6 +12,7 @@ import './styles.css';
 import type { EagleReopenMessage, EagleState, ManagedTab, ManagedWindow, SortMode } from '../shared/types';
 import { getEagleBaseUrl, isEagleUrl, updateEagleSourceUrl } from '../shared/urls';
 import { ageBucketForLastAccessed, colorsForAgeBucket, isAgeSortMode, type ThemeMode } from './age-colors';
+import { browserSnapshotsEqual } from './browser-snapshot';
 import {
   cameraForBounds,
   cameraForResize,
@@ -77,7 +78,7 @@ let currentLayout: WindowLayout = layoutWindows([]);
 let searchQuery = '';
 let refreshTimer: number | undefined;
 let refreshRequestId = 0;
-let suppressNextSelfActivation = false;
+let refreshAfterNextSelfActivation = false;
 let selectedTabId: number | undefined;
 let readingListUrls = new Set<string>();
 let readingListPendingTabIds = new Set<number>();
@@ -200,8 +201,9 @@ function bindEvents(): void {
 
   chrome.tabs.onCreated.addListener(scheduleRefresh);
   chrome.tabs.onActivated.addListener((activeInfo) => {
-    if (activeInfo.tabId === state.selfTabId && suppressNextSelfActivation) {
-      suppressNextSelfActivation = false;
+    if (activeInfo.tabId === state.selfTabId && refreshAfterNextSelfActivation) {
+      refreshAfterNextSelfActivation = false;
+      void refreshTabs().then(() => zoomToWindow(state.sourceWindowId));
       return;
     }
     scheduleRefresh();
@@ -253,10 +255,9 @@ function bindEvents(): void {
   chrome.runtime.onMessage.addListener((message: unknown, _sender, sendResponse) => {
     if (!isReopenMessage(message) || message.sourceWindowId !== state.sourceWindowId) return;
     cancelScheduledRefresh();
-    suppressNextSelfActivation = true;
+    refreshAfterNextSelfActivation = true;
     setOriginTabId(message.sourceTabId === state.selfTabId ? undefined : message.sourceTabId);
     updateSearchQuery('');
-    void refreshTabs().then(() => zoomToWindow(state.sourceWindowId));
     sendResponse(true);
   });
 
@@ -324,7 +325,7 @@ function scheduleRefresh(): void {
   cancelScheduledRefresh();
   refreshTimer = window.setTimeout(() => {
     refreshTimer = undefined;
-    void refreshTabs();
+    void refreshTabs({ renderUnchanged: false });
   }, 80);
 }
 
@@ -344,14 +345,14 @@ async function refreshReadingList(): Promise<void> {
   }
 }
 
-async function refreshTabs(): Promise<void> {
+async function refreshTabs({ renderUnchanged = true }: { renderUnchanged?: boolean } = {}): Promise<void> {
   const requestId = ++refreshRequestId;
   const chromeWindows = await chrome.windows.getAll({ populate: true, windowTypes: ['normal'] });
   if (requestId !== refreshRequestId) return;
   if (!hasInitialView) performance.mark('tab-eagle:tabs-ready');
   const eagleBaseUrl = getEagleBaseUrl();
 
-  managedWindows = sortWindowsById(chromeWindows
+  const nextManagedWindows = sortWindowsById(chromeWindows
     .filter((windowItem): windowItem is chrome.windows.Window & { id: number } => typeof windowItem.id === 'number')
     .map((windowItem) => ({
       id: windowItem.id,
@@ -363,6 +364,8 @@ async function refreshTabs(): Promise<void> {
         .map(toManagedTab)
         .filter((tab): tab is ManagedTab => Boolean(tab))
     })));
+  if (!renderUnchanged && browserSnapshotsEqual(managedWindows, nextManagedWindows)) return;
+  managedWindows = nextManagedWindows;
 
   managedTabs = managedWindows.flatMap((windowItem) => windowItem.tabs);
   rebuildOrderedTabs();
