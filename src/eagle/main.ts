@@ -78,7 +78,6 @@ let currentLayout: WindowLayout = layoutWindows([]);
 let searchQuery = '';
 let refreshTimer: number | undefined;
 let refreshRequestId = 0;
-let suppressNextSelfActivation = false;
 let selectedTabId: number | undefined;
 let readingListUrls = new Set<string>();
 let readingListPendingTabIds = new Set<number>();
@@ -201,10 +200,6 @@ function bindEvents(): void {
 
   chrome.tabs.onCreated.addListener(scheduleRefresh);
   chrome.tabs.onActivated.addListener((activeInfo) => {
-    if (activeInfo.tabId === state.selfTabId && suppressNextSelfActivation) {
-      suppressNextSelfActivation = false;
-      return;
-    }
     scheduleRefresh();
   });
   chrome.tabs.onUpdated.addListener((tabId, changeInfo) => {
@@ -254,7 +249,6 @@ function bindEvents(): void {
   chrome.runtime.onMessage.addListener((message: unknown, _sender, sendResponse) => {
     if (!isReopenMessage(message) || message.sourceWindowId !== state.sourceWindowId) return;
     cancelScheduledRefresh();
-    suppressNextSelfActivation = true;
     setOriginTabId(message.sourceTabId === state.selfTabId ? undefined : message.sourceTabId);
     updateSearchQuery('');
     void refreshTabs().then(() => zoomToWindow(state.sourceWindowId));

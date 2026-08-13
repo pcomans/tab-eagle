@@ -95,7 +95,7 @@ To save a Chrome performance trace under the ignored `perf-artifacts/` directory
 npm run perf:eagle -- --samples 5 --trace
 ```
 
-The fixture size can be changed with `--windows`, `--tabs`, and `--origins`. Use `--cold-budget-ms`, `--warm-budget-ms`, `--settled-budget-ms`, `--warm-render-budget`, or `--noop-render-budget` to test a specific performance hypothesis.
+The fixture size can be changed with `--windows`, `--tabs`, and `--origins`. Use `--cold-budget-ms`, `--warm-budget-ms`, `--warm-visible-budget-ms`, `--settled-budget-ms`, `--warm-render-budget`, or `--noop-render-budget` to test a specific performance hypothesis.
 
 ## Releases
 

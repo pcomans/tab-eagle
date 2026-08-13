@@ -103,6 +103,7 @@ async function runSample({ sampleIndex, extensionPath: unpackedExtensionPath, fi
       coldNavigationToPaintedOverviewMs: round(cold.navigationToPaintedOverviewMs),
       coldFirstContentfulPaintMs: round(cold.firstContentfulPaintMs),
       coldAppPhasesMs: phaseDurations(cold.appTimings),
+      warmVisibleMs: round(warm.visibleMs),
       warmOverviewMs: round(warm.overviewMs),
       warmPaintedOverviewMs: round(warm.paintedOverviewMs),
       warmRenderCount: warm.renderCount,
@@ -213,6 +214,8 @@ async function measureWarmReopen({ extension, sourcePage, eaglePage }) {
   await eaglePage.keyboard.press('Escape');
   await sourcePage.bringToFront();
 
+  await eaglePage.waitForFunction(() => document.visibilityState === 'hidden', { timeout: READY_TIMEOUT_MS });
+
   await eaglePage.evaluate(({ expectedWindows, expectedTabs }) => {
     window.__tabEaglePerfWarmReady = false;
     window.__tabEaglePerfWarmRenderCount = 0;
@@ -238,6 +241,8 @@ async function measureWarmReopen({ extension, sourcePage, eaglePage }) {
 
   const invokedAt = performance.now();
   await sourcePage.triggerExtensionAction(extension);
+  await eaglePage.waitForFunction(() => document.visibilityState === 'visible', { timeout: READY_TIMEOUT_MS });
+  const visibleAt = performance.now();
   await eaglePage.waitForFunction(() => window.__tabEaglePerfWarmReady === true, { timeout: READY_TIMEOUT_MS });
   const overviewAt = performance.now();
   await waitForOverviewPaint(eaglePage);
@@ -249,6 +254,7 @@ async function measureWarmReopen({ extension, sourcePage, eaglePage }) {
     return window.__tabEaglePerfWarmRenderCount;
   });
   return {
+    visibleMs: visibleAt - invokedAt,
     overviewMs: overviewAt - invokedAt,
     paintedOverviewMs: paintedAt - invokedAt,
     renderCount
@@ -390,6 +396,7 @@ function summarize(samples) {
       coldNavigationToOverviewMs: median(samples.map((sample) => sample.coldNavigationToOverviewMs)),
       coldNavigationToPaintedOverviewMs: median(samples.map((sample) => sample.coldNavigationToPaintedOverviewMs)),
       coldFirstContentfulPaintMs: median(samples.map((sample) => sample.coldFirstContentfulPaintMs)),
+      warmVisibleMs: median(samples.map((sample) => sample.warmVisibleMs)),
       warmOverviewMs: median(samples.map((sample) => sample.warmOverviewMs)),
       warmPaintedOverviewMs: median(samples.map((sample) => sample.warmPaintedOverviewMs)),
       warmRenderCount: median(samples.map((sample) => sample.warmRenderCount)),
@@ -423,6 +430,7 @@ function printResult(result, resultPath) {
   console.log(`Cold navigation → painted view:   ${formatMs(values.coldNavigationToPaintedOverviewMs)}`);
   console.log(`Cold first contentful paint:      ${formatMs(values.coldFirstContentfulPaintMs)}`);
   console.log(`Cold invocation → camera settled: ${formatMs(values.coldCameraSettledMs)}`);
+  console.log(`Warm invocation → tab visible:      ${formatMs(values.warmVisibleMs)}`);
   console.log(`Warm invocation → overview:       ${formatMs(values.warmOverviewMs)}`);
   console.log(`Warm invocation → painted view:   ${formatMs(values.warmPaintedOverviewMs)}`);
   console.log(`Warm invocation render count:     ${values.warmRenderCount}`);
@@ -438,6 +446,9 @@ function enforceBudgets(result) {
   }
   if (options.warmBudgetMs && result.median.warmOverviewMs > options.warmBudgetMs) {
     failures.push(`warm overview ${formatMs(result.median.warmOverviewMs)} exceeded ${formatMs(options.warmBudgetMs)}`);
+  }
+  if (options.warmVisibleBudgetMs && result.median.warmVisibleMs > options.warmVisibleBudgetMs) {
+    failures.push(`warm visibility ${formatMs(result.median.warmVisibleMs)} exceeded ${formatMs(options.warmVisibleBudgetMs)}`);
   }
   if (options.settledBudgetMs && result.median.coldCameraSettledMs > options.settledBudgetMs) {
     failures.push(`camera settled ${formatMs(result.median.coldCameraSettledMs)} exceeded ${formatMs(options.settledBudgetMs)}`);
@@ -466,6 +477,7 @@ function parseOptions(args) {
     samples: positiveInteger(values.get('samples'), DEFAULT_SAMPLE_COUNT, 'samples'),
     coldBudgetMs: optionalPositiveNumber(values.get('cold-budget-ms'), 'cold-budget-ms'),
     warmBudgetMs: optionalPositiveNumber(values.get('warm-budget-ms'), 'warm-budget-ms'),
+    warmVisibleBudgetMs: optionalPositiveNumber(values.get('warm-visible-budget-ms'), 'warm-visible-budget-ms'),
     settledBudgetMs: optionalPositiveNumber(values.get('settled-budget-ms'), 'settled-budget-ms'),
     warmRenderBudget: optionalPositiveNumber(values.get('warm-render-budget'), 'warm-render-budget'),
     noOpRenderBudget: optionalNonNegativeNumber(values.get('noop-render-budget'), 'noop-render-budget'),

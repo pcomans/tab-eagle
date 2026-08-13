@@ -58,12 +58,10 @@ async function tryReopenExistingEagle(
   sourceWindowId: number
 ): Promise<boolean> {
   try {
+    await chrome.tabs.update(eagleTabId, { active: true });
     const message: EagleReopenMessage = { type: 'tab-eagle-reopen', sourceTabId, sourceWindowId };
     const response: unknown = await chrome.tabs.sendMessage(eagleTabId, message);
-    if (response !== true) return false;
-
-    await chrome.tabs.update(eagleTabId, { active: true });
-    return true;
+    return response === true;
   } catch {
     return false;
   }
