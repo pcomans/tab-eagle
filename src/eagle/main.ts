@@ -12,6 +12,7 @@ import './styles.css';
 import type { EagleReopenMessage, EagleState, ManagedTab, ManagedWindow, SortMode } from '../shared/types';
 import { getEagleBaseUrl, isEagleUrl, updateEagleSourceUrl } from '../shared/urls';
 import { ageBucketForLastAccessed, colorsForAgeBucket, isAgeSortMode, type ThemeMode } from './age-colors';
+import { browserSnapshotsEqual } from './browser-snapshot';
 import {
   cameraForBounds,
   cameraForResize,
@@ -97,6 +98,8 @@ const domainColorRequests = new Set<string>();
 const colorSchemeQuery = window.matchMedia('(prefers-color-scheme: dark)');
 const reducedMotionQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
 
+performance.mark('tab-eagle:module-ready');
+
 const viewport = requiredElement<HTMLElement>('#viewport');
 const world = requiredElement<HTMLElement>('#world');
 const windowMap = requiredElement<HTMLElement>('#window-map');
@@ -124,6 +127,7 @@ function requiredElement<T extends HTMLElement>(selector: string): T {
 }
 
 async function init(): Promise<void> {
+  performance.mark('tab-eagle:init-start');
   const params = new URLSearchParams(location.search);
   const currentTab = await chrome.tabs.getCurrent();
   const selfTabId = currentTab?.id;
@@ -139,6 +143,7 @@ async function init(): Promise<void> {
     chrome.storage.local.get({ [SORT_STORAGE_KEY]: 'position' }),
     chrome.storage.session.get({ [WINDOW_NAMES_STORAGE_KEY]: {}, [WINDOW_LAYOUT_STORAGE_KEY]: undefined })
   ]);
+  performance.mark('tab-eagle:storage-ready');
   const storedSortMode = stored[SORT_STORAGE_KEY];
 
   state = {
@@ -156,7 +161,9 @@ async function init(): Promise<void> {
   bindEvents();
   renderCamera();
   syncSortControl();
+  performance.mark('tab-eagle:reading-list-start');
   await refreshReadingList();
+  performance.mark('tab-eagle:tabs-start');
   await refreshTabs();
 }
 
@@ -192,8 +199,11 @@ function bindEvents(): void {
   document.addEventListener('keydown', handleKeydown);
 
   chrome.tabs.onCreated.addListener(scheduleRefresh);
-  chrome.tabs.onActivated.addListener(scheduleRefresh);
-  chrome.tabs.onUpdated.addListener((_tabId, changeInfo) => {
+  chrome.tabs.onActivated.addListener((activeInfo) => {
+    scheduleRefresh();
+  });
+  chrome.tabs.onUpdated.addListener((tabId, changeInfo) => {
+    if (tabId === state.selfTabId) return;
     const interestingChange =
       'url' in changeInfo ||
       'pendingUrl' in changeInfo ||
@@ -238,8 +248,9 @@ function bindEvents(): void {
 
   chrome.runtime.onMessage.addListener((message: unknown, _sender, sendResponse) => {
     if (!isReopenMessage(message) || message.sourceWindowId !== state.sourceWindowId) return;
+    cancelScheduledRefresh();
     setOriginTabId(message.sourceTabId === state.selfTabId ? undefined : message.sourceTabId);
-    setSearchQuery('');
+    updateSearchQuery('');
     void refreshTabs().then(() => zoomToWindow(state.sourceWindowId));
     sendResponse(true);
   });
@@ -305,8 +316,16 @@ function handleKeydown(event: KeyboardEvent): void {
 }
 
 function scheduleRefresh(): void {
+  cancelScheduledRefresh();
+  refreshTimer = window.setTimeout(() => {
+    refreshTimer = undefined;
+    void refreshTabs({ renderUnchanged: false });
+  }, 80);
+}
+
+function cancelScheduledRefresh(): void {
   window.clearTimeout(refreshTimer);
-  refreshTimer = window.setTimeout(() => void refreshTabs(), 80);
+  refreshTimer = undefined;
 }
 
 async function refreshReadingList(): Promise<void> {
@@ -314,18 +333,20 @@ async function refreshReadingList(): Promise<void> {
   try {
     const entries = await chrome.readingList.query({});
     readingListUrls = new Set(entries.map((entry) => entry.url));
+    performance.mark('tab-eagle:reading-list-ready');
   } catch {
     setStatus('Tab Eagle could not read the Chrome Reading List.');
   }
 }
 
-async function refreshTabs(): Promise<void> {
+async function refreshTabs({ renderUnchanged = true }: { renderUnchanged?: boolean } = {}): Promise<void> {
   const requestId = ++refreshRequestId;
   const chromeWindows = await chrome.windows.getAll({ populate: true, windowTypes: ['normal'] });
   if (requestId !== refreshRequestId) return;
+  if (!hasInitialView) performance.mark('tab-eagle:tabs-ready');
   const eagleBaseUrl = getEagleBaseUrl();
 
-  managedWindows = sortWindowsById(chromeWindows
+  const nextManagedWindows = sortWindowsById(chromeWindows
     .filter((windowItem): windowItem is chrome.windows.Window & { id: number } => typeof windowItem.id === 'number')
     .map((windowItem) => ({
       id: windowItem.id,
@@ -337,17 +358,24 @@ async function refreshTabs(): Promise<void> {
         .map(toManagedTab)
         .filter((tab): tab is ManagedTab => Boolean(tab))
     })));
+  const snapshotUnchanged = browserSnapshotsEqual(managedWindows, nextManagedWindows);
+  managedWindows = nextManagedWindows;
 
   managedTabs = managedWindows.flatMap((windowItem) => windowItem.tabs);
   rebuildOrderedTabs();
+  if (!renderUnchanged && snapshotUnchanged) return;
   await recalculateLayout();
 
   if (state.originTabId && !managedTabs.some((tab) => tab.id === state.originTabId)) setOriginTabId(undefined);
+  const initialView = !hasInitialView;
+  if (initialView) {
+    hasInitialView = true;
+    setCameraView(viewForWindow(state.sourceWindowId) ?? view);
+  }
   render();
 
-  if (!hasInitialView) {
-    hasInitialView = true;
-    window.requestAnimationFrame(() => zoomToWindow(state.sourceWindowId));
+  if (initialView) {
+    performance.mark('tab-eagle:overview-ready');
   }
 }
 
@@ -978,15 +1006,20 @@ function fitAll(): void {
 
 function zoomToWindow(windowId: number): void {
   cancelScheduledSearchFit();
+  const targetView = viewForWindow(windowId);
+  if (targetView) animateCameraTo(targetView);
+}
+
+function viewForWindow(windowId: number): CameraView | undefined {
   const item = currentLayout.items.find((candidate) => candidate.windowId === windowId);
-  if (!item) return;
+  if (!item) return undefined;
   const rect = currentViewportBounds();
   const targetZoom = clamp(Math.min((rect.width - 120) / item.width, (rect.height - 110) / item.height), 0.76, 1.12);
-  animateCameraTo({
+  return {
     zoom: targetZoom,
     panX: rect.width / 2 - (item.x + item.width / 2) * targetZoom,
     panY: rect.height / 2 - (item.y + item.height / 2) * targetZoom
-  });
+  };
 }
 
 function zoomAt(nextZoom: number, clientX?: number, clientY?: number): void {
@@ -1114,12 +1147,20 @@ function moveSelection(key: SearchNavigationKey, columnCount: number): void {
 }
 
 function setSearchQuery(query: string): void {
-  searchQuery = query;
-  searchInput.value = query;
-  selectedTabId = reconcileSelectedTabId(filterTabsBySearch(orderedTabs, searchQuery), selectedTabId, { resetToFirst: true });
+  updateSearchQuery(query);
   render();
   scheduleCurrentSearchResultFit();
   announceSearchSelection();
+}
+
+function updateSearchQuery(query: string): void {
+  searchQuery = query;
+  searchInput.value = query;
+  selectedTabId = reconcileSelectedTabId(filterTabsBySearch(orderedTabs, searchQuery), selectedTabId, { resetToFirst: true });
+  if (!query) {
+    cancelScheduledSearchFit();
+    searchAnnouncement.textContent = '';
+  }
 }
 
 function announceSearchSelection(matches = filterTabsBySearch(orderedTabs, searchQuery)): void {

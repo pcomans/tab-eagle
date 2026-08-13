@@ -67,6 +67,36 @@ npm test
 npm run build
 ```
 
+### Isolated performance benchmark
+
+Run the real extension-action path without touching your normal Chrome profile:
+
+```sh
+npm run perf:eagle
+```
+
+The benchmark builds the unpacked extension, launches Chrome for Testing with a temporary profile, creates seven synthetic windows containing 90 local tabs distributed across 18 locally mapped origins, triggers Tab Eagle, and reports cold and warm painted-overview timings. The isolated browser closes when the run finishes.
+
+Puppeteer normally installs Chrome for Testing with `npm install`. If npm's script policy suppresses that download, install it once explicitly:
+
+```sh
+npm run perf:setup
+```
+
+Use the local regression budget after changing startup or rendering code:
+
+```sh
+npm run perf:check
+```
+
+To save a Chrome performance trace under the ignored `perf-artifacts/` directory:
+
+```sh
+npm run perf:eagle -- --samples 5 --trace
+```
+
+The fixture size can be changed with `--windows`, `--tabs`, and `--origins`. Use `--cold-budget-ms`, `--warm-budget-ms`, `--warm-visible-budget-ms`, `--settled-budget-ms`, `--warm-render-budget`, or `--noop-render-budget` to test a specific performance hypothesis.
+
 ## Releases
 
 GitHub Actions builds, tests, and packages the extension on pull requests and pushes to `main`.
