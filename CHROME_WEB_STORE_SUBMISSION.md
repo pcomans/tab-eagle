@@ -161,9 +161,7 @@ Chrome Web Store screenshots:
 - `store-assets/screenshots/03-domain-sort.png`: domain sorting with card colors
 - `store-assets/screenshots/04-recent-sort.png`: recent sorting with age colors
 
-All screenshots are 1280x800.
-
-The four screenshot files must be replaced with captures of the 0.2.0 multi-window interface before submission; the current files show the previous single-window release.
+All screenshots are 1280x800 and show the 0.2.0 multi-window interface with synthetic tabs and windows. No personal browsing data appears in the store assets.
 
 Optional:
 
