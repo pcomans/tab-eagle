@@ -75,7 +75,7 @@ Run the real extension-action path without touching your normal Chrome profile:
 npm run perf:eagle
 ```
 
-The benchmark builds the unpacked extension, launches Chrome for Testing with a temporary profile, creates seven synthetic windows containing 90 local tabs, triggers Tab Eagle, and reports cold and warm painted-overview timings. The isolated browser closes when the run finishes.
+The benchmark builds the unpacked extension, launches Chrome for Testing with a temporary profile, creates seven synthetic windows containing 90 local tabs distributed across 18 locally mapped origins, triggers Tab Eagle, and reports cold and warm painted-overview timings. The isolated browser closes when the run finishes.
 
 Puppeteer normally installs Chrome for Testing with `npm install`. If npm's script policy suppresses that download, install it once explicitly:
 
@@ -95,7 +95,7 @@ To save a Chrome performance trace under the ignored `perf-artifacts/` directory
 npm run perf:eagle -- --samples 5 --trace
 ```
 
-The fixture size can be changed with `--windows` and `--tabs`. Use `--cold-budget-ms`, `--warm-budget-ms`, `--settled-budget-ms`, `--warm-render-budget`, or `--noop-render-budget` to test a specific performance hypothesis.
+The fixture size can be changed with `--windows`, `--tabs`, and `--origins`. Use `--cold-budget-ms`, `--warm-budget-ms`, `--settled-budget-ms`, `--warm-render-budget`, or `--noop-render-budget` to test a specific performance hypothesis.
 
 ## Releases
 

@@ -7,6 +7,7 @@ import puppeteer from 'puppeteer';
 
 const DEFAULT_WINDOW_COUNT = 7;
 const DEFAULT_TAB_COUNT = 90;
+const DEFAULT_ORIGIN_COUNT = 18;
 const DEFAULT_SAMPLE_COUNT = 3;
 const READY_TIMEOUT_MS = 15_000;
 
@@ -24,6 +25,7 @@ try {
       sampleIndex,
       extensionPath,
       fixtureOrigin: fixtureServer.origin,
+      fixturePort: fixtureServer.port,
       tracePath: options.trace && sampleIndex === 0
         ? resolve(outputDir, 'eagle-cold.trace.json')
         : undefined
@@ -39,13 +41,14 @@ try {
   await fixtureServer.close();
 }
 
-async function runSample({ sampleIndex, extensionPath: unpackedExtensionPath, fixtureOrigin, tracePath }) {
+async function runSample({ sampleIndex, extensionPath: unpackedExtensionPath, fixtureOrigin, fixturePort, tracePath }) {
   let browser;
   try {
     browser = await puppeteer.launch({
       headless: true,
       enableExtensions: [unpackedExtensionPath],
       dumpio: process.env.TAB_EAGLE_PERF_BROWSER_LOGS === '1',
+      args: ['--host-resolver-rules=MAP *.test 127.0.0.1', '--no-proxy-server'],
       defaultViewport: { width: 1440, height: 900 }
     });
   } catch (error) {
@@ -62,8 +65,10 @@ async function runSample({ sampleIndex, extensionPath: unpackedExtensionPath, fi
       extension,
       sourcePage,
       fixtureOrigin,
+      fixturePort,
       windowCount: options.windows,
-      tabCount: options.tabs
+      tabCount: options.tabs,
+      originCount: options.origins
     });
 
     if (tracePath) {
@@ -91,6 +96,7 @@ async function runSample({ sampleIndex, extensionPath: unpackedExtensionPath, fi
       chromeVersion: await browser.version(),
       syntheticWindows: seed.windowCount,
       syntheticTabs: seed.tabCount,
+      syntheticOrigins: options.origins,
       coldOverviewMs: round(cold.overviewMs),
       coldCameraSettledMs: round(cold.cameraSettledMs),
       coldNavigationToOverviewMs: round(cold.navigationToOverviewMs),
@@ -118,8 +124,8 @@ async function findTabEagleExtension(browser) {
   throw new Error('Chrome for Testing did not load the Tab Eagle extension.');
 }
 
-async function seedBrowser({ extension, sourcePage, fixtureOrigin, windowCount, tabCount }) {
-  const urlsByWindow = distributeFixtureUrls(fixtureOrigin, windowCount, tabCount);
+async function seedBrowser({ extension, sourcePage, fixtureOrigin, fixturePort, windowCount, tabCount, originCount }) {
+  const urlsByWindow = distributeFixtureUrls(fixtureOrigin, fixturePort, windowCount, tabCount, originCount);
   await sourcePage.goto(urlsByWindow[0][0], { waitUntil: 'domcontentloaded' });
   const worker = await waitForExtensionWorker(extension);
 
@@ -322,7 +328,7 @@ async function waitForCameraToSettle(page) {
   }));
 }
 
-function distributeFixtureUrls(origin, windowCount, tabCount) {
+function distributeFixtureUrls(origin, port, windowCount, tabCount, originCount) {
   const baseCount = Math.floor(tabCount / windowCount);
   const remainder = tabCount % windowCount;
   let tabNumber = 0;
@@ -330,6 +336,8 @@ function distributeFixtureUrls(origin, windowCount, tabCount) {
     const count = baseCount + (windowIndex < remainder ? 1 : 0);
     return Array.from({ length: count }, (_, tabIndex) => {
       const url = new URL(`/fixture/window-${windowIndex + 1}/tab-${tabIndex + 1}`, origin);
+      url.hostname = `site-${(tabNumber % originCount) + 1}.test`;
+      url.port = String(port);
       url.searchParams.set('n', String(++tabNumber));
       return url.toString();
     });
@@ -364,6 +372,7 @@ async function startFixtureServer() {
 
   return {
     origin: `http://127.0.0.1:${address.port}`,
+    port: address.port,
     close: () => new Promise((resolvePromise, reject) => {
       server.close((error) => error ? reject(error) : resolvePromise());
     })
@@ -374,7 +383,7 @@ function summarize(samples) {
   return {
     generatedAt: new Date().toISOString(),
     chromeVersion: samples[0]?.chromeVersion,
-    scenario: { windows: options.windows, tabs: options.tabs, samples: samples.length },
+    scenario: { windows: options.windows, tabs: options.tabs, origins: options.origins, samples: samples.length },
     median: {
       coldOverviewMs: median(samples.map((sample) => sample.coldOverviewMs)),
       coldCameraSettledMs: median(samples.map((sample) => sample.coldCameraSettledMs)),
@@ -408,7 +417,7 @@ function duration(timings, from, to) {
 
 function printResult(result, resultPath) {
   const { median: values, scenario } = result;
-  console.log(`Tab Eagle performance · ${scenario.windows} windows · ${scenario.tabs} tabs · ${scenario.samples} sample${scenario.samples === 1 ? '' : 's'}`);
+  console.log(`Tab Eagle performance · ${scenario.windows} windows · ${scenario.tabs} tabs · ${scenario.origins} origins · ${scenario.samples} sample${scenario.samples === 1 ? '' : 's'}`);
   console.log(`Cold invocation → overview:       ${formatMs(values.coldOverviewMs)}`);
   console.log(`Cold navigation → overview:       ${formatMs(values.coldNavigationToOverviewMs)}`);
   console.log(`Cold navigation → painted view:   ${formatMs(values.coldNavigationToPaintedOverviewMs)}`);
@@ -453,6 +462,7 @@ function parseOptions(args) {
   return {
     windows: positiveInteger(values.get('windows'), DEFAULT_WINDOW_COUNT, 'windows'),
     tabs: positiveInteger(values.get('tabs'), DEFAULT_TAB_COUNT, 'tabs'),
+    origins: positiveInteger(values.get('origins'), DEFAULT_ORIGIN_COUNT, 'origins'),
     samples: positiveInteger(values.get('samples'), DEFAULT_SAMPLE_COUNT, 'samples'),
     coldBudgetMs: optionalPositiveNumber(values.get('cold-budget-ms'), 'cold-budget-ms'),
     warmBudgetMs: optionalPositiveNumber(values.get('warm-budget-ms'), 'warm-budget-ms'),
