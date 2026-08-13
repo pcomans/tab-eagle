@@ -97,6 +97,8 @@ const domainColorRequests = new Set<string>();
 const colorSchemeQuery = window.matchMedia('(prefers-color-scheme: dark)');
 const reducedMotionQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
 
+performance.mark('tab-eagle:module-ready');
+
 const viewport = requiredElement<HTMLElement>('#viewport');
 const world = requiredElement<HTMLElement>('#world');
 const windowMap = requiredElement<HTMLElement>('#window-map');
@@ -124,6 +126,7 @@ function requiredElement<T extends HTMLElement>(selector: string): T {
 }
 
 async function init(): Promise<void> {
+  performance.mark('tab-eagle:init-start');
   const params = new URLSearchParams(location.search);
   const currentTab = await chrome.tabs.getCurrent();
   const selfTabId = currentTab?.id;
@@ -139,6 +142,7 @@ async function init(): Promise<void> {
     chrome.storage.local.get({ [SORT_STORAGE_KEY]: 'position' }),
     chrome.storage.session.get({ [WINDOW_NAMES_STORAGE_KEY]: {}, [WINDOW_LAYOUT_STORAGE_KEY]: undefined })
   ]);
+  performance.mark('tab-eagle:storage-ready');
   const storedSortMode = stored[SORT_STORAGE_KEY];
 
   state = {
@@ -156,7 +160,9 @@ async function init(): Promise<void> {
   bindEvents();
   renderCamera();
   syncSortControl();
+  performance.mark('tab-eagle:reading-list-start');
   await refreshReadingList();
+  performance.mark('tab-eagle:tabs-start');
   await refreshTabs();
 }
 
@@ -314,6 +320,7 @@ async function refreshReadingList(): Promise<void> {
   try {
     const entries = await chrome.readingList.query({});
     readingListUrls = new Set(entries.map((entry) => entry.url));
+    performance.mark('tab-eagle:reading-list-ready');
   } catch {
     setStatus('Tab Eagle could not read the Chrome Reading List.');
   }
@@ -323,6 +330,7 @@ async function refreshTabs(): Promise<void> {
   const requestId = ++refreshRequestId;
   const chromeWindows = await chrome.windows.getAll({ populate: true, windowTypes: ['normal'] });
   if (requestId !== refreshRequestId) return;
+  if (!hasInitialView) performance.mark('tab-eagle:tabs-ready');
   const eagleBaseUrl = getEagleBaseUrl();
 
   managedWindows = sortWindowsById(chromeWindows
@@ -343,11 +351,15 @@ async function refreshTabs(): Promise<void> {
   await recalculateLayout();
 
   if (state.originTabId && !managedTabs.some((tab) => tab.id === state.originTabId)) setOriginTabId(undefined);
+  const initialView = !hasInitialView;
+  if (initialView) {
+    hasInitialView = true;
+    setCameraView(viewForWindow(state.sourceWindowId) ?? view);
+  }
   render();
 
-  if (!hasInitialView) {
-    hasInitialView = true;
-    window.requestAnimationFrame(() => zoomToWindow(state.sourceWindowId));
+  if (initialView) {
+    performance.mark('tab-eagle:overview-ready');
   }
 }
 
@@ -978,15 +990,20 @@ function fitAll(): void {
 
 function zoomToWindow(windowId: number): void {
   cancelScheduledSearchFit();
+  const targetView = viewForWindow(windowId);
+  if (targetView) animateCameraTo(targetView);
+}
+
+function viewForWindow(windowId: number): CameraView | undefined {
   const item = currentLayout.items.find((candidate) => candidate.windowId === windowId);
-  if (!item) return;
+  if (!item) return undefined;
   const rect = currentViewportBounds();
   const targetZoom = clamp(Math.min((rect.width - 120) / item.width, (rect.height - 110) / item.height), 0.76, 1.12);
-  animateCameraTo({
+  return {
     zoom: targetZoom,
     panX: rect.width / 2 - (item.x + item.width / 2) * targetZoom,
     panY: rect.height / 2 - (item.y + item.height / 2) * targetZoom
-  });
+  };
 }
 
 function zoomAt(nextZoom: number, clientX?: number, clientY?: number): void {

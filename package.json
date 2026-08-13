@@ -5,6 +5,9 @@
   "type": "module",
   "scripts": {
     "build": "vite build && node scripts/fix-dist.mjs",
+    "perf:check": "npm run perf:eagle -- --samples 5 --settled-budget-ms 400",
+    "perf:eagle": "npm run build && node scripts/perf-eagle.mjs",
+    "perf:setup": "puppeteer browsers install chrome",
     "test": "vitest run",
     "typecheck": "tsc --noEmit"
   },
@@ -14,6 +17,7 @@
   },
   "devDependencies": {
     "@types/chrome": "^0.1.33",
+    "puppeteer": "^25.6.0",
     "typescript": "^5.8.3",
     "vite": "^7.0.0",
     "vitest": "^3.2.4"
