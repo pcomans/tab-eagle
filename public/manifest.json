@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Tab Eagle",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "A zoomable bird's-eye view of tabs across all your Chrome windows.",
   "icons": {
     "16": "icons/icon16.png",
@@ -26,6 +26,7 @@
   "commands": {
     "_execute_action": {
       "suggested_key": {
+        "default": "Ctrl+Shift+E",
         "mac": "Command+Shift+E"
       }
     }

@@ -6,14 +6,14 @@ This file contains copy and checklist items for publishing Tab Eagle to the Chro
 
 Build and zip the extension from the `dist` folder. The `manifest.json` file must be at the root of the ZIP.
 
-GitHub Actions builds and packages the extension automatically. Push the matching `v0.2.0` tag to create a GitHub Release with `tab-eagle-0.2.0.zip` attached.
+GitHub Actions builds and packages the extension automatically. Push the matching `v0.2.1` tag to create a GitHub Release with `tab-eagle-0.2.1.zip` attached.
 
 ```sh
 npm run typecheck
 npm test
 npm run build
 cd dist
-zip -r ../tab-eagle-0.2.0.zip .
+zip -r ../tab-eagle-0.2.1.zip .
 ```
 
 ## Store Listing
