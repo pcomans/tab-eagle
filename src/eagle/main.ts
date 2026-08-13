@@ -78,7 +78,7 @@ let currentLayout: WindowLayout = layoutWindows([]);
 let searchQuery = '';
 let refreshTimer: number | undefined;
 let refreshRequestId = 0;
-let refreshAfterNextSelfActivation = false;
+let suppressNextSelfActivation = false;
 let selectedTabId: number | undefined;
 let readingListUrls = new Set<string>();
 let readingListPendingTabIds = new Set<number>();
@@ -201,9 +201,8 @@ function bindEvents(): void {
 
   chrome.tabs.onCreated.addListener(scheduleRefresh);
   chrome.tabs.onActivated.addListener((activeInfo) => {
-    if (activeInfo.tabId === state.selfTabId && refreshAfterNextSelfActivation) {
-      refreshAfterNextSelfActivation = false;
-      void refreshTabs().then(() => zoomToWindow(state.sourceWindowId));
+    if (activeInfo.tabId === state.selfTabId && suppressNextSelfActivation) {
+      suppressNextSelfActivation = false;
       return;
     }
     scheduleRefresh();
@@ -255,9 +254,10 @@ function bindEvents(): void {
   chrome.runtime.onMessage.addListener((message: unknown, _sender, sendResponse) => {
     if (!isReopenMessage(message) || message.sourceWindowId !== state.sourceWindowId) return;
     cancelScheduledRefresh();
-    refreshAfterNextSelfActivation = true;
+    suppressNextSelfActivation = true;
     setOriginTabId(message.sourceTabId === state.selfTabId ? undefined : message.sourceTabId);
     updateSearchQuery('');
+    void refreshTabs().then(() => zoomToWindow(state.sourceWindowId));
     sendResponse(true);
   });
 
@@ -364,11 +364,12 @@ async function refreshTabs({ renderUnchanged = true }: { renderUnchanged?: boole
         .map(toManagedTab)
         .filter((tab): tab is ManagedTab => Boolean(tab))
     })));
-  if (!renderUnchanged && browserSnapshotsEqual(managedWindows, nextManagedWindows)) return;
+  const snapshotUnchanged = browserSnapshotsEqual(managedWindows, nextManagedWindows);
   managedWindows = nextManagedWindows;
 
   managedTabs = managedWindows.flatMap((windowItem) => windowItem.tabs);
   rebuildOrderedTabs();
+  if (!renderUnchanged && snapshotUnchanged) return;
   await recalculateLayout();
 
   if (state.originTabId && !managedTabs.some((tab) => tab.id === state.originTabId)) setOriginTabId(undefined);

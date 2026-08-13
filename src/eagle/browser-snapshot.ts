@@ -29,6 +29,5 @@ function tabsEqual(left: ManagedTab, right: ManagedTab | undefined): boolean {
     left.pinned === right.pinned &&
     left.audible === right.audible &&
     left.muted === right.muted &&
-    left.lastAccessed === right.lastAccessed &&
-    left.active === right.active);
+    left.lastAccessed === right.lastAccessed);
 }

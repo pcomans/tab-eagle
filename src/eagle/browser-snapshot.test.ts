@@ -41,4 +41,11 @@ describe('browserSnapshotsEqual', () => {
     addedTab[0].tabs.push({ ...addedTab[0].tabs[0], id: 11, index: 1 });
     expect(browserSnapshotsEqual(snapshot(), addedTab)).toBe(false);
   });
+
+  it('ignores active state because the map does not render it', () => {
+    const changedActiveTab = snapshot();
+    changedActiveTab[0].tabs[0].active = false;
+
+    expect(browserSnapshotsEqual(snapshot(), changedActiveTab)).toBe(true);
+  });
 });
