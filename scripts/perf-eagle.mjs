@@ -97,7 +97,8 @@ async function runSample({ sampleIndex, extensionPath: unpackedExtensionPath, fi
       coldFirstContentfulPaintMs: round(cold.firstContentfulPaintMs),
       coldAppPhasesMs: phaseDurations(cold.appTimings),
       warmOverviewMs: round(warm.overviewMs),
-      warmPaintedOverviewMs: round(warm.paintedOverviewMs)
+      warmPaintedOverviewMs: round(warm.paintedOverviewMs),
+      warmRenderCount: warm.renderCount
     };
   } finally {
     await browser.close();
@@ -206,16 +207,25 @@ async function measureWarmReopen({ extension, sourcePage, eaglePage }) {
 
   await eaglePage.evaluate(({ expectedWindows, expectedTabs }) => {
     window.__tabEaglePerfWarmReady = false;
+    window.__tabEaglePerfWarmRenderCount = 0;
     const map = document.querySelector('#window-map');
     if (!map) throw new Error('Tab Eagle window map is missing.');
+    const replaceChildren = map.replaceChildren.bind(map);
+    map.replaceChildren = (...nodes) => {
+      window.__tabEaglePerfWarmRenderCount += 1;
+      replaceChildren(...nodes);
+    };
     const observer = new MutationObserver(() => {
       if (document.querySelectorAll('.browser-window').length === expectedWindows &&
           document.querySelectorAll('.tab-card').length === expectedTabs) {
         window.__tabEaglePerfWarmReady = true;
-        observer.disconnect();
       }
     });
     observer.observe(map, { childList: true, subtree: true });
+    window.__tabEaglePerfWarmObserver = observer;
+    window.__tabEaglePerfRestoreReplaceChildren = () => {
+      map.replaceChildren = replaceChildren;
+    };
   }, { expectedWindows: options.windows, expectedTabs: options.tabs });
 
   const invokedAt = performance.now();
@@ -223,9 +233,17 @@ async function measureWarmReopen({ extension, sourcePage, eaglePage }) {
   await eaglePage.waitForFunction(() => window.__tabEaglePerfWarmReady === true, { timeout: READY_TIMEOUT_MS });
   const overviewAt = performance.now();
   await waitForOverviewPaint(eaglePage);
+  const paintedAt = performance.now();
+  await delay(180);
+  const renderCount = await eaglePage.evaluate(() => {
+    window.__tabEaglePerfWarmObserver?.disconnect();
+    window.__tabEaglePerfRestoreReplaceChildren?.();
+    return window.__tabEaglePerfWarmRenderCount;
+  });
   return {
     overviewMs: overviewAt - invokedAt,
-    paintedOverviewMs: performance.now() - invokedAt
+    paintedOverviewMs: paintedAt - invokedAt,
+    renderCount
   };
 }
 
@@ -330,7 +348,8 @@ function summarize(samples) {
       coldNavigationToPaintedOverviewMs: median(samples.map((sample) => sample.coldNavigationToPaintedOverviewMs)),
       coldFirstContentfulPaintMs: median(samples.map((sample) => sample.coldFirstContentfulPaintMs)),
       warmOverviewMs: median(samples.map((sample) => sample.warmOverviewMs)),
-      warmPaintedOverviewMs: median(samples.map((sample) => sample.warmPaintedOverviewMs))
+      warmPaintedOverviewMs: median(samples.map((sample) => sample.warmPaintedOverviewMs)),
+      warmRenderCount: median(samples.map((sample) => sample.warmRenderCount))
     },
     samples
   };
@@ -362,6 +381,7 @@ function printResult(result, resultPath) {
   console.log(`Cold invocation → camera settled: ${formatMs(values.coldCameraSettledMs)}`);
   console.log(`Warm invocation → overview:       ${formatMs(values.warmOverviewMs)}`);
   console.log(`Warm invocation → painted view:   ${formatMs(values.warmPaintedOverviewMs)}`);
+  console.log(`Warm invocation render count:     ${values.warmRenderCount}`);
   console.log(`Results: ${resultPath}`);
   if (options.trace) console.log(`Trace:   ${resolve(outputDir, 'eagle-cold.trace.json')}`);
 }
@@ -376,6 +396,9 @@ function enforceBudgets(result) {
   }
   if (options.settledBudgetMs && result.median.coldCameraSettledMs > options.settledBudgetMs) {
     failures.push(`camera settled ${formatMs(result.median.coldCameraSettledMs)} exceeded ${formatMs(options.settledBudgetMs)}`);
+  }
+  if (options.warmRenderBudget && result.median.warmRenderCount > options.warmRenderBudget) {
+    failures.push(`warm render count ${result.median.warmRenderCount} exceeded ${options.warmRenderBudget}`);
   }
   if (failures.length > 0) throw new Error(`Performance budget failed: ${failures.join('; ')}.`);
 }
@@ -395,6 +418,7 @@ function parseOptions(args) {
     coldBudgetMs: optionalPositiveNumber(values.get('cold-budget-ms'), 'cold-budget-ms'),
     warmBudgetMs: optionalPositiveNumber(values.get('warm-budget-ms'), 'warm-budget-ms'),
     settledBudgetMs: optionalPositiveNumber(values.get('settled-budget-ms'), 'settled-budget-ms'),
+    warmRenderBudget: optionalPositiveNumber(values.get('warm-render-budget'), 'warm-render-budget'),
     outputDir: values.get('output-dir') || 'perf-artifacts',
     trace: values.get('trace') === true
   };

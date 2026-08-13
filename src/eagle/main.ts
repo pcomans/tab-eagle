@@ -77,6 +77,7 @@ let currentLayout: WindowLayout = layoutWindows([]);
 let searchQuery = '';
 let refreshTimer: number | undefined;
 let refreshRequestId = 0;
+let suppressNextSelfActivation = false;
 let selectedTabId: number | undefined;
 let readingListUrls = new Set<string>();
 let readingListPendingTabIds = new Set<number>();
@@ -198,8 +199,15 @@ function bindEvents(): void {
   document.addEventListener('keydown', handleKeydown);
 
   chrome.tabs.onCreated.addListener(scheduleRefresh);
-  chrome.tabs.onActivated.addListener(scheduleRefresh);
-  chrome.tabs.onUpdated.addListener((_tabId, changeInfo) => {
+  chrome.tabs.onActivated.addListener((activeInfo) => {
+    if (activeInfo.tabId === state.selfTabId && suppressNextSelfActivation) {
+      suppressNextSelfActivation = false;
+      return;
+    }
+    scheduleRefresh();
+  });
+  chrome.tabs.onUpdated.addListener((tabId, changeInfo) => {
+    if (tabId === state.selfTabId) return;
     const interestingChange =
       'url' in changeInfo ||
       'pendingUrl' in changeInfo ||
@@ -244,8 +252,10 @@ function bindEvents(): void {
 
   chrome.runtime.onMessage.addListener((message: unknown, _sender, sendResponse) => {
     if (!isReopenMessage(message) || message.sourceWindowId !== state.sourceWindowId) return;
+    cancelScheduledRefresh();
+    suppressNextSelfActivation = true;
     setOriginTabId(message.sourceTabId === state.selfTabId ? undefined : message.sourceTabId);
-    setSearchQuery('');
+    updateSearchQuery('');
     void refreshTabs().then(() => zoomToWindow(state.sourceWindowId));
     sendResponse(true);
   });
@@ -311,8 +321,16 @@ function handleKeydown(event: KeyboardEvent): void {
 }
 
 function scheduleRefresh(): void {
+  cancelScheduledRefresh();
+  refreshTimer = window.setTimeout(() => {
+    refreshTimer = undefined;
+    void refreshTabs();
+  }, 80);
+}
+
+function cancelScheduledRefresh(): void {
   window.clearTimeout(refreshTimer);
-  refreshTimer = window.setTimeout(() => void refreshTabs(), 80);
+  refreshTimer = undefined;
 }
 
 async function refreshReadingList(): Promise<void> {
@@ -1131,12 +1149,20 @@ function moveSelection(key: SearchNavigationKey, columnCount: number): void {
 }
 
 function setSearchQuery(query: string): void {
-  searchQuery = query;
-  searchInput.value = query;
-  selectedTabId = reconcileSelectedTabId(filterTabsBySearch(orderedTabs, searchQuery), selectedTabId, { resetToFirst: true });
+  updateSearchQuery(query);
   render();
   scheduleCurrentSearchResultFit();
   announceSearchSelection();
+}
+
+function updateSearchQuery(query: string): void {
+  searchQuery = query;
+  searchInput.value = query;
+  selectedTabId = reconcileSelectedTabId(filterTabsBySearch(orderedTabs, searchQuery), selectedTabId, { resetToFirst: true });
+  if (!query) {
+    cancelScheduledSearchFit();
+    searchAnnouncement.textContent = '';
+  }
 }
 
 function announceSearchSelection(matches = filterTabsBySearch(orderedTabs, searchQuery)): void {

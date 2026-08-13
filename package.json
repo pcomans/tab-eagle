@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "build": "vite build && node scripts/fix-dist.mjs",
-    "perf:check": "npm run perf:eagle -- --samples 5 --settled-budget-ms 400",
+    "perf:check": "npm run perf:eagle -- --samples 5 --settled-budget-ms 400 --warm-render-budget 1",
     "perf:eagle": "npm run build && node scripts/perf-eagle.mjs",
     "perf:setup": "puppeteer browsers install chrome",
     "test": "vitest run",
